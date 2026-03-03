@@ -82,7 +82,7 @@ finance-app-backend/
 │   │   ├── transactions.py     # Transaction endpoints
 │   │   └── dev.py              # Development utilities
 │   └── services/               # Business logic services
-│       ├── auth.py             # Authentication utilities (JWT, password hashing, verification)
+│       ├── auth.py             # Authentication utilities     (JWT,password hashing,  verification)
 │       ├── email.py            # Email sending service
 │       └── stats.py            # Statistics aggregation service
 ├── alembic/                    # Database migration scripts
