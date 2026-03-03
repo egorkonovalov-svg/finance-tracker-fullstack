@@ -1,0 +1,69 @@
+# Virtual env and Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+
+# Node dependencies (reinstalled in image)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+yarn-debug.log*
+
+# Build outputs
+dist/
+build/
+web-build/
+.expo/
+expo-env.d.ts
+
+# Native (not needed for web/dev server in container)
+ios/
+android/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+.env.local
+.env.*.local
+
+# Git and IDE
+.git/
+.gitignore
+.cursor/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.md
+!README.md
+
+# Python tests and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Frontend tests and misc
+coverage/
+.figma/
+.assets/
+*.tsbuildinfo
+.metro-health-check*
+
+# Docker (when building from subdirs)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Misc
+.DS_Store
+*.log
+CLAUDE/

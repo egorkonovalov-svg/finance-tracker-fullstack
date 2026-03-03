@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="390" height="844">
+  <rect width="390" height="844" fill="#F5F3FF"/>
+  <rect x="24" y="60" width="40" height="40" rx="20" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <text x="44" y="85" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#111827">?</text>
+  <rect x="159" y="140" width="72" height="72" rx="36" fill="#4F46E514" stroke="#4F46E5"/>
+  <text x="195" y="245" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="bold" fill="#111827">Check your email</text>
+  <text x="195" y="280" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#6B7280">We sent a 6-digit code to</text>
+  <text x="195" y="302" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="600" fill="#111827">u***@example.com</text>
+  <rect x="52" y="360" width="46" height="56" rx="12" fill="rgba(255,255,255,0.6)" stroke="#4F46E5"/>
+  <rect x="108" y="360" width="46" height="56" rx="12" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <rect x="164" y="360" width="46" height="56" rx="12" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <rect x="220" y="360" width="46" height="56" rx="12" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <rect x="276" y="360" width="46" height="56" rx="12" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <rect x="332" y="360" width="46" height="56" rx="12" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <text x="195" y="460" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#6B7280">Didn't receive the code?</text>
+  <text x="195" y="488" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="600" fill="#4F46E5">Resend Code</text>
+</svg>

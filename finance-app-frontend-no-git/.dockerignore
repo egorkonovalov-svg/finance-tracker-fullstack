@@ -1,0 +1,46 @@
+# Dependencies (reinstalled in image)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+yarn-debug.log*
+
+# Expo / build outputs
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native (not needed for web/dev server in container)
+ios/
+android/
+
+# Git and IDE
+.git/
+.gitignore
+.cursor/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Env (pass at runtime)
+.env
+.env.local
+.env.*.local
+
+# Testing and docs
+coverage/
+*.md
+!README.md
+
+# Figma and misc
+.figma/
+.assets/
+*.tsbuildinfo
+.metro-health-check*
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
