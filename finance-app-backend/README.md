@@ -360,8 +360,8 @@ Example signup flow:
 
 ## License
 
-[Specify your license here]
+No license
 
 ## Support
 
-For issues, questions, or contributions, please [specify your support channels].
+For issues, questions, or contributions, please message me @evomin on telegram.
