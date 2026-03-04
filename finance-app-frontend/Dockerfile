@@ -14,10 +14,10 @@ COPY . .
 # Expose Metro / Expo dev server
 EXPOSE 8081
 
-# Run dev server for web; use 'lan' so server is reachable from host (Expo only allows lan|tunnel|localhost)
+# Run generic Expo dev server (native targets); use 'lan' so server is reachable from host
 ENV CI=1
 ENV WDS_SOCKET_HOST=0.0.0.0
-CMD ["npx", "expo", "start", "--web", "--host", "lan"]
+CMD ["npx", "expo", "start", "--host", "lan"]
 
 # ─── Stage: production (static web export + nginx) ──────────────────────────
 FROM node:20-alpine AS builder
