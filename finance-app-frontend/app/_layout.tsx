@@ -5,6 +5,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { useFonts, Outfit_600SemiBold, Outfit_700Bold } from '@expo-google-fonts/outfit';
 import { DMSans_400Regular, DMSans_500Medium, DMSans_600SemiBold } from '@expo-google-fonts/dm-sans';
+import { PlayfairDisplay_600SemiBold, PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';
+import { SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import 'react-native-reanimated';
 
@@ -88,6 +90,10 @@ export default function RootLayout() {
     DMSans_400Regular,
     DMSans_500Medium,
     DMSans_600SemiBold,
+    PlayfairDisplay_600SemiBold,
+    PlayfairDisplay_700Bold,
+    SpaceMono_400Regular,
+    SpaceMono_700Bold,
   });
 
   const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
