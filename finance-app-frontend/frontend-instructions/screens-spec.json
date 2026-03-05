@@ -4,39 +4,49 @@
   "designTokens": {
     "colors": {
       "light": {
-        "background": "#F5F3FF",
+        "background": "#F4F1EB",
+        "paperBackground": "#F8F5EE",
+        "paperAccent": "#E6DFCF",
         "text": "#111827",
         "textSecondary": "#6B7280",
         "textMuted": "#9CA3AF",
-        "primary": "#4F46E5",
-        "income": "#10B981",
-        "expense": "#EF4444",
-        "tabBar": "rgba(255,255,255,0.85)",
-        "inputBorder": "#E5E7EB",
-        "inputBg": "rgba(255,255,255,0.6)"
+        "primary": "#2563EB",
+        "income": "#16A34A",
+        "expense": "#DC2626",
+        "tabBar": "rgba(255,255,255,0.88)",
+        "cardGlass": "rgba(255,255,255,0.72)",
+        "cardBorder": "rgba(148,163,184,0.35)",
+        "inputBorder": "rgba(148,163,184,0.5)",
+        "inputBg": "rgba(255,255,255,0.72)",
+        "blurRadius": 28
       },
       "dark": {
-        "background": "#0C0A1D",
-        "text": "#F9FAFB",
+        "background": "#050814",
+        "paperBackground": "rgba(15,23,42,1)",
+        "paperAccent": "rgba(30,64,175,1)",
+        "text": "#E5E7EB",
         "textSecondary": "#9CA3AF",
-        "textMuted": "#4B5563",
-        "primary": "#818CF8",
-        "income": "#10B981",
-        "expense": "#EF4444",
-        "tabBar": "rgba(12,10,29,0.92)",
-        "inputBorder": "rgba(255,255,255,0.1)",
-        "inputBg": "rgba(255,255,255,0.06)"
+        "textMuted": "#6B7280",
+        "primary": "#60A5FA",
+        "income": "#22C55E",
+        "expense": "#F97373",
+        "tabBar": "rgba(15,23,42,0.94)",
+        "cardGlass": "rgba(15,23,42,0.82)",
+        "cardBorder": "rgba(148,163,184,0.4)",
+        "inputBorder": "rgba(148,163,184,0.45)",
+        "inputBg": "rgba(15,23,42,0.9)",
+        "blurRadius": 32
       },
       "palette": {
-        "indigo": "#4F46E5",
-        "indigoLight": "#818CF8",
-        "indigoDark": "#3730A3",
-        "emerald": "#10B981",
+        "indigo": "#2563EB",
+        "indigoLight": "#60A5FA",
+        "indigoDark": "#1D4ED8",
+        "emerald": "#22C55E",
         "red": "#EF4444"
       }
     },
     "spacing": { "xs": 4, "sm": 8, "md": 12, "lg": 16, "xl": 24, "2xl": 32, "3xl": 48 },
-    "radius": { "sm": 8, "md": 12, "lg": 16, "xl": 20, "2xl": 24, "full": 9999 },
+    "radius": { "sm": 10, "md": 14, "lg": 18, "xl": 22, "2xl": 28, "full": 9999 },
     "fontSize": { "xs": 11, "sm": 13, "md": 15, "lg": 17, "xl": 20, "2xl": 24, "3xl": 30, "4xl": 36 },
     "fontFamily": {
       "heading": "Outfit Bold",
@@ -44,6 +54,14 @@
       "body": "DM Sans Regular",
       "bodyMedium": "DM Sans Medium",
       "bodySemiBold": "DM Sans SemiBold"
+    },
+    "shadow": {
+      "paperSoft": "0 18px 55px rgba(15,23,42,0.08)",
+      "glass": "0 20px 60px rgba(15,23,42,0.25)"
+    },
+    "effects": {
+      "blurGlass": 28,
+      "borderHairline": 0.5
     }
   },
   "pages": [
@@ -102,10 +120,10 @@
           "name": "Dashboard",
           "tabId": "dashboard",
           "sections": [
-            { "name": "Header", "elements": ["Greeting, {userName}", "Your Finances"] },
-            { "name": "Balance Card", "elements": ["Total Balance", "Amount", "Income | Expenses row"] },
-            { "name": "Summary Row", "elements": ["Income card", "Expenses card", "Savings card"] },
-            { "name": "Recent Transactions", "elements": ["Section title", "Transaction list or empty state"] }
+            { "name": "Header", "elements": ["Greeting, {userName}", "Your Finances (paper headline style)"] },
+            { "name": "Balance Card", "elements": ["Frosted glass card: Total Balance", "Large amount on paper backdrop", "Pills row: Income | Expenses"] },
+            { "name": "Summary Row", "elements": ["Three glass cards: Income", "Expenses", "Savings"] },
+            { "name": "Recent Transactions", "elements": ["Section title on paper", "List of transactions in subtle glass rows or paper empty state"] }
           ]
         },
         {
@@ -189,7 +207,7 @@
   "tabBarSpec": {
     "height": 88,
     "position": "bottom",
-    "style": "floating blur",
+    "style": "floating iOS glass over paper",
     "items": [
       { "label": "Dashboard", "icon": "home" },
       { "label": "Transactions", "icon": "list" },
