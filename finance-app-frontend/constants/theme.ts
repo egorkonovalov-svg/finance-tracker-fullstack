@@ -29,10 +29,6 @@ export const Palette = {
   gray950:   '#030712',
   white:     '#FFFFFF',
   black:     '#000000',
-  // Fountain-pen inspired inks
-  charcoal:  '#1A1A1B',  // primary text ink
-  incomeInk: '#2E7D32',  // deep emerald ink
-  expenseInk: '#B22222', // dried oxblood red
 } as const;
 
 // ─── Theme Colors ────────────────────────────────────────────────────────────
@@ -40,13 +36,13 @@ export const Palette = {
 export const Colors = {
   light: {
     // Surfaces
-    background:       '#F5F2E9',       // warm ivory paper
-    surface:          'rgba(245,242,233,0.9)',
-    surfaceBorder:    'rgba(245,242,233,0.65)',
-    card:             'rgba(245,242,233,0.85)',
+    background:       '#F5F3FF',       // very faint indigo wash
+    surface:          'rgba(255,255,255,0.72)',
+    surfaceBorder:    'rgba(255,255,255,0.45)',
+    card:             'rgba(255,255,255,0.55)',
 
     // Text
-    text:             Palette.charcoal,
+    text:             Palette.gray900,
     textSecondary:    Palette.gray500,
     textMuted:        Palette.gray400,
 
@@ -56,24 +52,24 @@ export const Colors = {
     primaryLight:     Palette.indigoLight,
 
     // Semantic
-    income:           Palette.incomeInk,
-    incomeLight:      'rgba(46,125,50,0.2)',
-    expense:          Palette.expenseInk,
-    expenseLight:     'rgba(178,34,34,0.22)',
+    income:           Palette.emerald,
+    incomeLight:      Palette.emeraldLight,
+    expense:          Palette.red,
+    expenseLight:     Palette.redLight,
 
     // Tab bar
     tabIconDefault:   Palette.gray400,
     tabIconSelected:  Palette.indigo,
-    tabBar:           'rgba(245,242,233,0.9)',
-    tabBarBorder:     'rgba(245,242,233,0.45)',
+    tabBar:           'rgba(255,255,255,0.85)',
+    tabBarBorder:     'rgba(255,255,255,0.3)',
 
     // UI
     icon:             Palette.gray500,
     separator:        Palette.gray200,
-    inputBg:          'rgba(245,242,233,0.9)',
+    inputBg:          'rgba(255,255,255,0.6)',
     inputBorder:      Palette.gray200,
     placeholder:      Palette.gray400,
-    overlay:          'rgba(26,26,27,0.35)',
+    overlay:          'rgba(0,0,0,0.3)',
   },
   dark: {
     // Surfaces
@@ -93,10 +89,10 @@ export const Colors = {
     primaryLight:     Palette.indigo,
 
     // Semantic
-    income:           Palette.incomeInk,
-    incomeLight:      'rgba(46,125,50,0.3)',
-    expense:          Palette.expenseInk,
-    expenseLight:     'rgba(178,34,34,0.32)',
+    income:           Palette.emerald,
+    incomeLight:      Palette.emeraldLight,
+    expense:          Palette.red,
+    expenseLight:     Palette.redLight,
 
     // Tab bar
     tabIconDefault:   Palette.gray600,
@@ -110,7 +106,7 @@ export const Colors = {
     inputBg:          'rgba(255,255,255,0.06)',
     inputBorder:      'rgba(255,255,255,0.1)',
     placeholder:      Palette.gray600,
-    overlay:          'rgba(26,26,27,0.7)',
+    overlay:          'rgba(0,0,0,0.6)',
   },
 } as const;
 
@@ -120,26 +116,26 @@ export type ThemeColors = typeof Colors.light | typeof Colors.dark;
 
 export const Glass = {
   light: {
-    blur: 24,
+    blur: 40,
     tint: 'light' as const,
-    backgroundColor: 'rgba(245,242,233,0.38)',
-    borderColor: 'rgba(245,242,233,0.6)',
-    borderWidth: 0.5,
-    shadowColor: 'rgba(26,26,27,0.06)',
-    shadowOffset: { width: 2, height: 2 },
+    backgroundColor: 'rgba(255,255,255,0.35)',
+    borderColor: 'rgba(255,255,255,0.5)',
+    borderWidth: 1,
+    shadowColor: 'rgba(0,0,0,0.06)',
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 1,
-    shadowRadius: 2,
+    shadowRadius: 24,
   },
   dark: {
-    blur: 28,
+    blur: 50,
     tint: 'dark' as const,
-    backgroundColor: 'rgba(30,27,60,0.5)',
-    borderColor: 'rgba(245,242,233,0.25)',
-    borderWidth: 0.5,
-    shadowColor: 'rgba(15,23,42,0.4)',
-    shadowOffset: { width: 2, height: 2 },
+    backgroundColor: 'rgba(30,27,60,0.4)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    shadowColor: 'rgba(0,0,0,0.3)',
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 1,
-    shadowRadius: 3,
+    shadowRadius: 24,
   },
 } as const;
 
@@ -158,23 +154,23 @@ export const Spacing = {
 // ─── Border Radius ───────────────────────────────────────────────────────────
 
 export const Radius = {
-  sm: 2,
-  md: 3,
-  lg: 4,
-  xl: 4,
-  '2xl': 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  '2xl': 24,
   full: 9999,
 } as const;
 
 // ─── Typography ──────────────────────────────────────────────────────────────
 
 export const FontFamily = {
-  heading: 'PlayfairDisplay_700Bold',
-  headingMedium: 'PlayfairDisplay_600SemiBold',
+  heading: 'Outfit_700Bold',
+  headingMedium: 'Outfit_600SemiBold',
   body: 'DMSans_400Regular',
   bodyMedium: 'DMSans_500Medium',
   bodySemiBold: 'DMSans_600SemiBold',
-  mono: 'SpaceMono_400Regular',
+  mono: Platform.OS === 'ios' ? 'ui-monospace' : 'monospace',
 } as const;
 
 export const FontSize = {
