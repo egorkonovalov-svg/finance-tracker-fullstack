@@ -7,16 +7,19 @@ import { BlurView } from 'expo-blur';
 import { HapticTab } from '@/components/haptic-tab';
 import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Palette } from '@/constants/theme';
 
-function AddTabIcon({ color, focused }: { color: string; focused: boolean }) {
+function AddTabIcon({ focused }: { focused: boolean }) {
+  const { colors, glass } = useTheme();
+
   return (
     <View
       style={[
         styles.addButton,
         {
-          backgroundColor: focused ? Palette.indigo : Palette.indigoLight,
-          shadowColor: Palette.indigo,
+          backgroundColor: focused ? colors.primary : colors.primaryLight,
+          shadowColor: colors.primary,
+          shadowOpacity: glass.shadowOpacity,
+          shadowRadius: glass.shadowRadius,
         },
       ]}
     >
@@ -26,7 +29,7 @@ function AddTabIcon({ color, focused }: { color: string; focused: boolean }) {
 }
 
 export default function TabLayout() {
-  const { isDark, colors, glass } = useTheme();
+  const { colors, glass } = useTheme();
   const { t } = useTranslation();
 
   return (
@@ -46,10 +49,14 @@ export default function TabLayout() {
           position: 'absolute',
           borderTopWidth: 0,
           elevation: 0,
-          height: Platform.OS === 'ios' ? 88 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          height: Platform.OS === 'ios' ? 72 : 64,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
           paddingTop: 8,
           backgroundColor: 'transparent',
+          marginHorizontal: 24,
+          marginBottom: Platform.OS === 'ios' ? 16 : 16,
+          borderRadius: 24,
+          overflow: 'hidden',
         },
         tabBarBackground: () => (
           <BlurView
@@ -59,8 +66,8 @@ export default function TabLayout() {
               StyleSheet.absoluteFill,
               {
                 backgroundColor: colors.tabBar,
-                borderTopWidth: StyleSheet.hairlineWidth,
-                borderTopColor: colors.tabBarBorder,
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: colors.tabBarBorder,
               },
             ]}
           />
@@ -89,7 +96,7 @@ export default function TabLayout() {
         name="add"
         options={{
           title: '',
-          tabBarIcon: ({ color, focused }) => <AddTabIcon color={color} focused={focused} />,
+          tabBarIcon: ({ focused }) => <AddTabIcon focused={focused} />,
           tabBarLabel: () => null,
         }}
       />
@@ -122,7 +129,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -20,
+    marginTop: 12,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 12,
