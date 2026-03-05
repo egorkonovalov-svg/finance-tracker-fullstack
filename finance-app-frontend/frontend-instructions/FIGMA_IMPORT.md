@@ -6,7 +6,7 @@ Use this guide and the provided assets to recreate the app’s pages and tabs in
 
 ## 1. Frame size
 
-- **Phone frame:** 390 × 844 px (iPhone 14 standard).
+- **Phone frame:** 393 × 852 px (iPhone 17 Pro standard).
 - Use one frame per screen; place tab screens in one flow and auth/secondary in separate flows.
 
 ---
