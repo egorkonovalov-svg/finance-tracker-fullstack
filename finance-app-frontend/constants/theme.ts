@@ -3,13 +3,12 @@ import { Platform } from 'react-native';
 // ─── Color Palette ───────────────────────────────────────────────────────────
 
 export const Palette = {
-  // Core brand (from screens-spec.json designTokens.palette)
-  indigo:      '#2563EB',
-  indigoLight: '#60A5FA',
-  indigoDark:  '#1D4ED8',
-  emerald:     '#22C55E',
+  indigo:    '#4F46E5',
+  indigoLight: '#818CF8',
+  indigoDark: '#3730A3',
+  emerald:   '#10B981',
   emeraldLight: '#34D399',
-  red:         '#EF4444',
+  red:       '#EF4444',
   redLight:  '#F87171',
   amber:     '#F59E0B',
   sky:       '#0EA5E9',
@@ -36,21 +35,16 @@ export const Palette = {
 
 export const Colors = {
   light: {
-    // Surfaces (from designTokens.colors.light)
-    background:       '#F4F1EB',
-    paperBackground:  '#F8F5EE',
-    paperAccent:      '#E6DFCF',
-    // Backwards‑compatible surface tokens
+    // Surfaces
+    background:       '#F5F3FF',       // very faint indigo wash
     surface:          'rgba(255,255,255,0.72)',
     surfaceBorder:    'rgba(255,255,255,0.45)',
     card:             'rgba(255,255,255,0.55)',
-    cardGlass:        'rgba(255,255,255,0.72)',
-    cardBorder:       'rgba(148,163,184,0.35)',
 
     // Text
-    text:             '#111827',
-    textSecondary:    '#6B7280',
-    textMuted:        '#9CA3AF',
+    text:             Palette.gray900,
+    textSecondary:    Palette.gray500,
+    textMuted:        Palette.gray400,
 
     // Brand
     tint:             Palette.indigo,
@@ -58,41 +52,36 @@ export const Colors = {
     primaryLight:     Palette.indigoLight,
 
     // Semantic
-    income:           '#16A34A',
+    income:           Palette.emerald,
     incomeLight:      Palette.emeraldLight,
-    expense:          '#DC2626',
+    expense:          Palette.red,
     expenseLight:     Palette.redLight,
 
     // Tab bar
     tabIconDefault:   Palette.gray400,
     tabIconSelected:  Palette.indigo,
-    tabBar:           'rgba(255,255,255,0.88)',
+    tabBar:           'rgba(255,255,255,0.85)',
     tabBarBorder:     'rgba(255,255,255,0.3)',
 
     // UI
     icon:             Palette.gray500,
     separator:        Palette.gray200,
-    inputBg:          'rgba(255,255,255,0.72)',
-    inputBorder:      'rgba(148,163,184,0.5)',
+    inputBg:          'rgba(255,255,255,0.6)',
+    inputBorder:      Palette.gray200,
     placeholder:      Palette.gray400,
     overlay:          'rgba(0,0,0,0.3)',
   },
   dark: {
-    // Surfaces (from designTokens.colors.dark)
-    background:       '#050814',
-    paperBackground:  'rgba(15,23,42,1)',
-    paperAccent:      'rgba(30,64,175,1)',
-    // Backwards‑compatible surface tokens
+    // Surfaces
+    background:       '#0C0A1D',       // deep navy
     surface:          'rgba(30,27,60,0.72)',
     surfaceBorder:    'rgba(255,255,255,0.08)',
     card:             'rgba(30,27,60,0.55)',
-    cardGlass:        'rgba(15,23,42,0.82)',
-    cardBorder:       'rgba(148,163,184,0.4)',
 
     // Text
-    text:             '#E5E7EB',
-    textSecondary:    '#9CA3AF',
-    textMuted:        '#6B7280',
+    text:             Palette.gray50,
+    textSecondary:    Palette.gray400,
+    textMuted:        Palette.gray600,
 
     // Brand
     tint:             Palette.indigoLight,
@@ -100,22 +89,22 @@ export const Colors = {
     primaryLight:     Palette.indigo,
 
     // Semantic
-    income:           '#22C55E',
+    income:           Palette.emerald,
     incomeLight:      Palette.emeraldLight,
-    expense:          '#F97373',
+    expense:          Palette.red,
     expenseLight:     Palette.redLight,
 
     // Tab bar
     tabIconDefault:   Palette.gray600,
     tabIconSelected:  Palette.indigoLight,
-    tabBar:           'rgba(15,23,42,0.94)',
+    tabBar:           'rgba(12,10,29,0.92)',
     tabBarBorder:     'rgba(255,255,255,0.06)',
 
     // UI
     icon:             Palette.gray400,
     separator:        'rgba(255,255,255,0.08)',
-    inputBg:          'rgba(15,23,42,0.9)',
-    inputBorder:      'rgba(148,163,184,0.45)',
+    inputBg:          'rgba(255,255,255,0.06)',
+    inputBorder:      'rgba(255,255,255,0.1)',
     placeholder:      Palette.gray600,
     overlay:          'rgba(0,0,0,0.6)',
   },
@@ -127,11 +116,10 @@ export type ThemeColors = typeof Colors.light | typeof Colors.dark;
 
 export const Glass = {
   light: {
-    // designTokens.effects.blurGlass (light)
-    blur: 28,
+    blur: 40,
     tint: 'light' as const,
     backgroundColor: 'rgba(255,255,255,0.35)',
-    borderColor: 'rgba(148,163,184,0.35)',
+    borderColor: 'rgba(255,255,255,0.5)',
     borderWidth: 1,
     shadowColor: 'rgba(0,0,0,0.06)',
     shadowOffset: { width: 0, height: 8 },
@@ -139,11 +127,10 @@ export const Glass = {
     shadowRadius: 24,
   },
   dark: {
-    // designTokens.effects.blurGlass (dark)
-    blur: 32,
+    blur: 50,
     tint: 'dark' as const,
-    backgroundColor: 'rgba(15,23,42,0.82)',
-    borderColor: 'rgba(148,163,184,0.4)',
+    backgroundColor: 'rgba(30,27,60,0.4)',
+    borderColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1,
     shadowColor: 'rgba(0,0,0,0.3)',
     shadowOffset: { width: 0, height: 8 },
