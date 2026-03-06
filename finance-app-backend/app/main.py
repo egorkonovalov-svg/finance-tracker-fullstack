@@ -1,22 +1,25 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
 from app.config import settings
 from app.database import engine, Base
-from app.routers import auth, categories, dev, transactions
+from app.routers import auth, categories, transactions
 
-SHOW_DOCS_ENVIRONMENT = ("local", "staging")
+logger = logging.getLogger(__name__)
+
+SHOW_DOCS_ENVIRONMENT = ("local",)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Import all models so Base.metadata knows about them
     import app.models  # noqa: F401
 
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     yield
 
@@ -27,9 +30,12 @@ if settings.ENVIRONMENT not in SHOW_DOCS_ENVIRONMENT:
 
 app = FastAPI(**app_configs)
 
+app.state.limiter = auth.limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,12 +44,12 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(transactions.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
-app.include_router(dev.router, prefix="/api/v1")
+
+if settings.ENVIRONMENT == "local":
+    from app.routers import dev
+    app.include_router(dev.router, prefix="/api/v1")
 
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
-
-# if "name" == "__main__":
-#     uvicorn.run("main:app",host:"0.0.0.0", port=8000)

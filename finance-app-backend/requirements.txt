@@ -10,3 +10,4 @@ bcrypt
 httpx
 python-dotenv
 aiosmtplib
+slowapi
