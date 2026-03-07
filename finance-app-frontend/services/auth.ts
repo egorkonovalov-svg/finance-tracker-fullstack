@@ -10,18 +10,12 @@ import type {
   User,
 } from '@/types/auth';
 
-// ─── Mock helpers ─────────────────────────────────────────────────────────────
+// ─── Mock helpers (development only) ──────────────────────────────────────────
 
 const MOCK_USER: User = {
   id: 'user-1',
   email: 'demo@fintrack.app',
   name: 'Demo User',
-};
-
-const ADMIN_USER: User = {
-  id: 'user-0',
-  email: 'admin',
-  name: 'Admin',
 };
 
 const MOCK_TOKEN = 'mock-jwt-token-fintrack';
@@ -37,7 +31,7 @@ async function mockLogin(payload: LoginPayload): Promise<SessionResponse> {
   if (!payload.email || !payload.password) {
     throw new Error('Email and password are required');
   }
-  if (payload.email !== 'admin' && payload.password.length < 6) {
+  if (payload.password.length < 6) {
     throw new Error('Invalid credentials');
   }
   return { session_id: MOCK_SESSION_ID, message: 'Verification code sent to your email' };

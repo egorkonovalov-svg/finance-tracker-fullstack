@@ -1,7 +1,10 @@
+import logging
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,13 +24,19 @@ from app.schemas.auth import (
 )
 from app.services.auth import (
     DEFAULT_CATEGORIES,
+    add_token_to_blocklist,
     create_access_token,
     create_verification,
     hash_password,
     validate_verification_code,
+    verify_apple_id_token,
     verify_password,
 )
 from app.services.email import send_verification_email
+
+logger = logging.getLogger(__name__)
+
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -56,7 +65,8 @@ def _build_auth_response(user: User, token: str) -> AuthResponse:
     response_model=VerificationPendingResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def signup(body: SignupRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def signup(request: Request, body: SignupRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == body.email))
     existing = result.scalar_one_or_none()
     if existing and existing.is_verified:
@@ -90,7 +100,8 @@ async def signup(body: SignupRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login", response_model=VerificationPendingResponse)
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == body.email))
     user = result.scalar_one_or_none()
 
@@ -120,7 +131,8 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/verify-code", response_model=AuthResponse)
-async def verify_code(body: VerifyCodeRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def verify_code(request: Request, body: VerifyCodeRequest, db: AsyncSession = Depends(get_db)):
     record = await validate_verification_code(db, body.session_id, body.code)
 
     result = await db.execute(select(User).where(User.id == record.user_id))
@@ -141,7 +153,8 @@ async def verify_code(body: VerifyCodeRequest, db: AsyncSession = Depends(get_db
 
 
 @router.post("/resend-code", response_model=VerificationPendingResponse)
-async def resend_code(body: ResendCodeRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("3/minute")
+async def resend_code(request: Request, body: ResendCodeRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(VerificationCode).where(
             VerificationCode.id == UUID(body.session_id)
@@ -188,7 +201,8 @@ async def resend_code(body: ResendCodeRequest, db: AsyncSession = Depends(get_db
 
 
 @router.post("/social", response_model=AuthResponse)
-async def social_auth(body: SocialAuthRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def social_auth(request: Request, body: SocialAuthRequest, db: AsyncSession = Depends(get_db)):
     email: str | None = None
     name: str | None = None
 
@@ -207,12 +221,12 @@ async def social_auth(body: SocialAuthRequest, db: AsyncSession = Depends(get_db
         name = info.get("name")
 
     elif body.provider == "apple":
-        from jose import jwt as jose_jwt
-
         try:
-            payload = jose_jwt.get_unverified_claims(body.id_token)
+            payload = await verify_apple_id_token(body.id_token)
             email = payload.get("email")
             name = payload.get("name")
+        except HTTPException:
+            raise
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -257,5 +271,8 @@ async def me(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(current_user: User = Depends(get_current_user)):
+async def logout(request: Request, current_user: User = Depends(get_current_user)):
+    token = request.headers.get("Authorization", "").removeprefix("Bearer ")
+    if token:
+        add_token_to_blocklist(token)
     return None

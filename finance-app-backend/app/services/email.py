@@ -19,8 +19,16 @@ def _smtp_configured() -> bool:
 
 async def send_verification_email(to: str, code: str) -> None:
     if not _smtp_configured():
-        logger.warning("SMTP not configured -- printing code to console")
-        logger.warning(">>> Verification code for %s: %s <<<", to, code)
+        if settings.ENVIRONMENT == "local":
+            logger.warning("SMTP not configured -- printing code to console")
+            logger.warning(">>> Verification code for %s: %s <<<", to, code)
+        else:
+            logger.error(
+                "SMTP not configured in %s environment. "
+                "Verification email for %s could not be sent.",
+                settings.ENVIRONMENT,
+                to,
+            )
         return
 
     message = EmailMessage()
@@ -44,5 +52,4 @@ async def send_verification_email(to: str, code: str) -> None:
             timeout=10,
         )
     except Exception:
-        logger.exception("Failed to send email via SMTP, falling back to console")
-        logger.warning(">>> Verification code for %s: %s <<<", to, code)
+        logger.exception("Failed to send verification email to %s", to)
