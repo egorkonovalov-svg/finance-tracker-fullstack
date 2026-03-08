@@ -34,8 +34,7 @@ async function mockCreate(data: CreateBudgetPayload): Promise<Budget> {
   await delay();
   const existing = mockStore.find((b) => b.category === data.category);
   if (existing) {
-    existing.amount_limit = data.amount_limit;
-    return { ...existing };
+    throw new Error(`Budget for category '${data.category}' already exists`);
   }
   const budget: Budget = {
     id: `budget-${++nextId}`,

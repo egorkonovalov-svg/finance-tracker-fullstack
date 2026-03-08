@@ -181,7 +181,7 @@ export default function DashboardScreen() {
                     style={[
                       styles.goalProgressFill,
                       {
-                        width: `${Math.min(100, (g.current_amount / g.target_amount) * 100)}%`,
+                        width: `${g.target_amount > 0 ? Math.min(100, (g.current_amount / g.target_amount) * 100) : 0}%`,
                         backgroundColor: colors.primary,
                       },
                     ]}

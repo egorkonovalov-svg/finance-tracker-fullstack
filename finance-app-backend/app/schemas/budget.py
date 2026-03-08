@@ -5,12 +5,12 @@ from pydantic import BaseModel, Field
 
 class BudgetCreate(BaseModel):
     category: str = Field(min_length=1, max_length=100)
-    amount_limit: Decimal = Field(ge=0)
+    amount_limit: Decimal = Field(gt=0)
 
 
 class BudgetUpdate(BaseModel):
     category: str | None = Field(default=None, min_length=1, max_length=100)
-    amount_limit: Decimal | None = Field(default=None, ge=0)
+    amount_limit: Decimal | None = Field(default=None, gt=0)
 
 
 class BudgetResponse(BaseModel):
