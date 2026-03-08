@@ -8,7 +8,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.database import engine, Base
-from app.routers import auth, categories, transactions
+from app.routers import auth, budgets, categories, goals, transactions
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,7 @@ async def lifespan(app: FastAPI):
     import app.models  # noqa: F401
 
     async with engine.begin() as conn:
+        # await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     yield
 
@@ -44,6 +45,8 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(transactions.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
+app.include_router(budgets.router, prefix="/api/v1")
+app.include_router(goals.router, prefix="/api/v1")
 
 if settings.ENVIRONMENT == "local":
     from app.routers import dev

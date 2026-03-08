@@ -26,7 +26,7 @@ function AddTabIcon({ color, focused }: { color: string; focused: boolean }) {
 }
 
 export default function TabLayout() {
-  const { isDark, colors, glass } = useTheme();
+  const { colors, glass } = useTheme();
   const { t } = useTranslation();
 
   return (
@@ -99,6 +99,15 @@ export default function TabLayout() {
           title: t('tabs.analytics'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'bar-chart' : 'bar-chart-outline'} size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="budgets-goals"
+        options={{
+          title: t('tabs.budgetsGoals'),
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'wallet' : 'wallet-outline'} size={22} color={color} />
           ),
         }}
       />

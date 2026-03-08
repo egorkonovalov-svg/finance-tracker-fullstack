@@ -9,14 +9,13 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInRight, FadeInUp, Layout } from 'react-native-reanimated';
 
 import { useTheme } from '@/context/ThemeContext';
 import { useApp } from '@/context/AppContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { GlassCard } from '@/components/ui/glass-card';
-import { FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/theme';
+import { FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 import type { Category, CategoryType } from '@/types';
 
 const ICON_OPTIONS = [
@@ -38,7 +37,6 @@ const TYPE_KEYS: Record<CategoryType, string> = {
 };
 
 export default function CategoriesScreen() {
-  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { categories, addCategory, updateCategory, removeCategory } = useApp();
