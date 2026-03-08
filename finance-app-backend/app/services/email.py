@@ -7,7 +7,8 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-_PLACEHOLDER_VALUES = {"", "your-email@gmail.com", "your-app-password"}
+# _PLACEHOLDER_VALUES = {"", "your-email@gmail.com", "your-app-password"}
+_PLACEHOLDER_VALUES = {"", "", ""}
 
 
 def _smtp_configured() -> bool:
@@ -18,17 +19,20 @@ def _smtp_configured() -> bool:
 
 
 async def send_verification_email(to: str, code: str) -> None:
+    # In local dev, always print the code to the terminal so you can log in without SMTP
+    if settings.ENVIRONMENT == "local":
+        logger.warning(">>> FinTrack verification code for %s: %s <<<", to, code)
+        if not _smtp_configured():
+            logger.warning("SMTP not configured -- use the code above to verify")
+            return
+
     if not _smtp_configured():
-        if settings.ENVIRONMENT == "local":
-            logger.warning("SMTP not configured -- printing code to console")
-            logger.warning(">>> Verification code for %s: %s <<<", to, code)
-        else:
-            logger.error(
-                "SMTP not configured in %s environment. "
-                "Verification email for %s could not be sent.",
-                settings.ENVIRONMENT,
-                to,
-            )
+        logger.error(
+            "SMTP not configured in %s environment. "
+            "Verification email for %s could not be sent.",
+            settings.ENVIRONMENT,
+            to,
+        )
         return
 
     message = EmailMessage()
