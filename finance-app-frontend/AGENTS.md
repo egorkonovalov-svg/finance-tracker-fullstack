@@ -10,7 +10,7 @@ FinTrack is a React Native / Expo personal finance app (frontend only). It runs 
 
 - **Web mode** (recommended for Cloud agents): `npx expo start --web` — serves on `http://localhost:8081`
 - Standard scripts are in `package.json`: `npm start`, `npm run web`, `npm run lint`
-- No test framework is configured; there are no automated tests to run.
+- Tests: `npm test` (runs Jest). Test files live in `__tests__/`.
 
 ### Lint
 
@@ -24,4 +24,4 @@ The mock auth accepts any email/password and any 6-digit verification code. Afte
 
 - The Expo Metro bundler initial bundle takes ~15 seconds. Wait for the bundle to complete before navigating.
 - `"shadow*" style props are deprecated` warnings in the terminal are cosmetic and do not affect functionality.
-- There is no backend in this repo. `BACKEND_HANDOFF.md` describes a FastAPI backend that has not been built yet.
+- A FastAPI backend exists in `../finance-app-backend/`. See root `AGENTS.md` for backend instructions.
