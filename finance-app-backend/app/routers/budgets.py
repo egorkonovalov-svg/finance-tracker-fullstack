@@ -90,10 +90,10 @@ async def create_budget(
     )
     existing = result.scalar_one_or_none()
     if existing:
-        existing.amount_limit = body.amount_limit
-        await db.commit()
-        await db.refresh(existing)
-        return _to_response(existing)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Budget for category '{body.category}' already exists",
+        )
     budget = Budget(
         user_id=current_user.id,
         category=body.category,
@@ -124,6 +124,19 @@ async def update_budget(
             status_code=status.HTTP_404_NOT_FOUND, detail="Budget not found"
         )
     update_data = body.model_dump(exclude_unset=True)
+    new_category = update_data.get("category")
+    if new_category and new_category != budget.category:
+        dup = await db.execute(
+            select(Budget).where(
+                Budget.user_id == current_user.id,
+                Budget.category == new_category,
+            )
+        )
+        if dup.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Budget for category '{new_category}' already exists",
+            )
     for field, value in update_data.items():
         setattr(budget, field, value)
     await db.commit()
