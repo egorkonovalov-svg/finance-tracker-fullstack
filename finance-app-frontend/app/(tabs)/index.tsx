@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
 import {
-  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -27,11 +26,13 @@ export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const { isDark, colors } = useTheme();
   const { user } = useAuth();
-  const { transactions, stats, loading, error, refresh, clearError } = useApp();
+  const { transactions, stats, budgetSummary, goals, loading, error, refresh, clearError } = useApp();
   const { convertAndFormat } = useCurrency();
   const { t } = useTranslation();
 
   const recentTxs = transactions.slice(0, 5);
+  const budgetItems = (budgetSummary ?? []).slice(0, 3);
+  const dashboardGoals = goals.slice(0, 2);
 
   const totalBalance = stats?.balance ?? 0;
   const totalIncome = stats?.total_income ?? 0;
@@ -129,6 +130,68 @@ export default function DashboardScreen() {
           delay={400}
         />
       </View>
+
+      {/* ── Budgets (this month) ────────────────────────────────────────── */}
+      {budgetItems.length > 0 && (
+        <Animated.View entering={FadeInUp.delay(350).duration(400)} style={styles.section} accessibilityLabel={t('dashboard.budgets')}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('dashboard.budgets')}</Text>
+          <GlassCard padding={12} radius={16}>
+            {budgetItems.map((item) => {
+              const over = item.percent_used >= 100;
+              return (
+                <View key={item.category} style={[styles.budgetRow, { borderBottomColor: colors.separator }]}>
+                  <View style={styles.budgetRowMain}>
+                    <Text style={[styles.budgetCategory, { color: colors.text }]} numberOfLines={1}>{item.category}</Text>
+                    <Text style={[styles.budgetAmounts, { color: colors.textSecondary }]}>
+                      {convertAndFormat(item.amount_spent)} / {convertAndFormat(item.amount_limit)}
+                      {over && ` · ${t('dashboard.overBudget')}`}
+                    </Text>
+                  </View>
+                  <View style={[styles.budgetProgressTrack, { backgroundColor: colors.inputBg }]}>
+                    <View
+                      style={[
+                        styles.budgetProgressFill,
+                        {
+                          width: `${Math.min(100, item.percent_used)}%`,
+                          backgroundColor: over ? Palette.red : colors.primary,
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+              );
+            })}
+          </GlassCard>
+        </Animated.View>
+      )}
+
+      {/* ── Goals ───────────────────────────────────────────────────────── */}
+      {dashboardGoals.length > 0 && (
+        <Animated.View entering={FadeInUp.delay(380).duration(400)} style={styles.section} accessibilityLabel={t('dashboard.goals')}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('dashboard.goals')}</Text>
+          <GlassCard padding={12} radius={16}>
+            {dashboardGoals.map((g) => (
+              <View key={g.id} style={[styles.goalRow, { borderBottomColor: colors.separator }]}>
+                <Text style={[styles.goalName, { color: colors.text }]} numberOfLines={1}>{g.name}</Text>
+                <Text style={[styles.goalAmounts, { color: colors.textSecondary }]}>
+                  {convertAndFormat(g.current_amount)} / {convertAndFormat(g.target_amount)}
+                </Text>
+                <View style={[styles.goalProgressTrack, { backgroundColor: colors.inputBg }]}>
+                  <View
+                    style={[
+                      styles.goalProgressFill,
+                      {
+                        width: `${Math.min(100, (g.current_amount / g.target_amount) * 100)}%`,
+                        backgroundColor: colors.primary,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
+            ))}
+          </GlassCard>
+        </Animated.View>
+      )}
 
       {/* ── Recent Transactions ────────────────────────────────────────── */}
       <Animated.View entering={FadeInUp.delay(400).duration(400)} style={styles.section} accessibilityLabel={t('dashboard.recentTransactions')}>
@@ -264,5 +327,54 @@ const styles = StyleSheet.create({
   errorBannerBtn: {
     fontFamily: FontFamily.bodySemiBold,
     fontSize: FontSize.sm,
+  },
+  // Budget rows
+  budgetRow: {
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  budgetRowMain: {},
+  budgetCategory: {
+    fontFamily: FontFamily.bodySemiBold,
+    fontSize: FontSize.sm,
+  },
+  budgetAmounts: {
+    fontFamily: FontFamily.body,
+    fontSize: FontSize.xs,
+    marginTop: 2,
+  },
+  budgetProgressTrack: {
+    height: 4,
+    borderRadius: 2,
+    marginTop: 6,
+    overflow: 'hidden',
+  },
+  budgetProgressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  // Goal rows
+  goalRow: {
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  goalName: {
+    fontFamily: FontFamily.bodySemiBold,
+    fontSize: FontSize.sm,
+  },
+  goalAmounts: {
+    fontFamily: FontFamily.body,
+    fontSize: FontSize.xs,
+    marginTop: 2,
+  },
+  goalProgressTrack: {
+    height: 4,
+    borderRadius: 2,
+    marginTop: 6,
+    overflow: 'hidden',
+  },
+  goalProgressFill: {
+    height: '100%',
+    borderRadius: 2,
   },
 });

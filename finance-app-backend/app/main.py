@@ -8,7 +8,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.database import engine, Base
-from app.routers import auth, categories, transactions
+from app.routers import auth, budgets, categories, goals, transactions
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,8 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(transactions.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
+app.include_router(budgets.router, prefix="/api/v1")
+app.include_router(goals.router, prefix="/api/v1")
 
 if settings.ENVIRONMENT == "local":
     from app.routers import dev

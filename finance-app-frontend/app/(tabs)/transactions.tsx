@@ -11,8 +11,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-
 import { useTheme } from '@/context/ThemeContext';
 import { useApp } from '@/context/AppContext';
 import { useTranslation, localeToBCP47 } from '@/hooks/useTranslation';
@@ -22,11 +20,6 @@ import { FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/them
 import type { Transaction, TransactionType } from '@/types';
 
 type FilterType = 'all' | TransactionType;
-
-interface Section {
-  title: string;
-  data: Transaction[];
-}
 
 export default function TransactionsScreen() {
   const insets = useSafeAreaInsets();
@@ -198,8 +191,6 @@ export default function TransactionsScreen() {
 // ─── Swipe to Delete wrapper ─────────────────────────────────────────────────
 
 function SwipeToDelete({ children, onDelete }: { children: React.ReactNode; onDelete: () => void }) {
-  const { colors } = useTheme();
-
   // Using a simple long-press for deletion (cross-platform and reliable)
   return (
     <Pressable

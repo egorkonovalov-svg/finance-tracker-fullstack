@@ -76,6 +76,48 @@ export interface TransactionStats {
   daily: { date: string; income: number; expense: number }[];
 }
 
+// ─── Budget ───────────────────────────────────────────────────────────────────
+
+export interface Budget {
+  id: string;
+  category: string;
+  amount_limit: number;
+}
+
+export interface BudgetSummaryItem {
+  category: string;
+  amount_limit: number;
+  amount_spent: number;
+  percent_used: number;
+}
+
+export interface CreateBudgetPayload {
+  category: string;
+  amount_limit: number;
+}
+
+export type UpdateBudgetPayload = Partial<CreateBudgetPayload>;
+
+// ─── Goal ─────────────────────────────────────────────────────────────────────
+
+export interface Goal {
+  id: string;
+  name: string;
+  target_amount: number;
+  target_date: string; // YYYY-MM-DD
+  current_amount: number;
+  created_at: string; // ISO 8601
+}
+
+export interface CreateGoalPayload {
+  name: string;
+  target_amount: number;
+  target_date: string;
+  current_amount?: number;
+}
+
+export type UpdateGoalPayload = Partial<CreateGoalPayload>;
+
 // ─── Exchange Rates ──────────────────────────────────────────────────────────
 
 export interface ExchangeRatesResponse {

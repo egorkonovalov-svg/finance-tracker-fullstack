@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 
@@ -28,7 +27,6 @@ import type { TransactionType } from '@/types';
 export default function TransactionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const { transactions, categories, updateTransaction, removeTransaction, locale } = useApp();
   const { t } = useTranslation();

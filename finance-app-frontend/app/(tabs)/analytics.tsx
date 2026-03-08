@@ -19,7 +19,7 @@ type Period = 'month' | 'quarter' | 'year';
 export default function AnalyticsScreen() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
-  const { transactions, categories, stats } = useApp();
+  const { transactions, categories } = useApp();
   const { convertAndFormat, convert } = useCurrency();
   const { t, locale } = useTranslation();
   const dateLocale = localeToBCP47(locale);
