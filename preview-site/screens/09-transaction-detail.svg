@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="390" height="844">
+  <rect width="390" height="844" fill="#F5F3FF"/>
+  <rect x="0" y="0" width="390" height="56" fill="#F5F3FF" stroke="#E5E7EB"/>
+  <text x="45" y="38" font-family="sans-serif" font-size="17" fill="#4F46E5">?</text>
+  <text x="195" y="38" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#111827">Transaction</text>
+  <text x="345" y="38" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#4F46E5">Edit</text>
+  <rect x="24" y="80" width="342" height="44" rx="16" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <text x="115" y="108" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#EF4444">Expense</text>
+  <text x="275" y="108" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#9CA3AF">Income</text>
+  <rect x="24" y="145" width="342" height="70" rx="20" fill="rgba(255,255,255,0.55)" stroke="rgba(255,255,255,0.45)"/>
+  <text x="45" y="178" font-family="sans-serif" font-size="13" fill="#6B7280">Amount</text>
+  <text x="45" y="208" font-family="sans-serif" font-size="24" font-weight="600" fill="#EF4444">-$45.00</text>
+  <rect x="24" y="230" width="342" height="48" rx="12" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <text x="45" y="260" font-family="sans-serif" font-size="15" fill="#111827">Food</text>
+  <rect x="24" y="295" width="342" height="48" rx="12" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <text x="45" y="325" font-family="sans-serif" font-size="15" fill="#111827">Lunch at cafe</text>
+  <rect x="24" y="360" width="342" height="48" rx="12" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <text x="45" y="390" font-family="sans-serif" font-size="15" fill="#111827">Feb 20, 2026</text>
+  <rect x="24" y="430" width="342" height="48" rx="16" fill="transparent" stroke="#EF4444"/>
+  <text x="195" y="460" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="600" fill="#EF4444">Delete</text>
+</svg>

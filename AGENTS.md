@@ -12,10 +12,13 @@ Full-stack personal-finance app (monorepo).
 
 The frontend can run standalone with mock data (`EXPO_PUBLIC_USE_MOCK=true`), making the backend optional for UI-only work.
 
+- Preview site (static landing page): `preview-site/`, port 3000
+
 ### Running services
 
 - **Frontend (web):** `npx expo start --web` from `finance-app-frontend/` (port 8081)
 - **Backend:** `source venv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload` from `finance-app-backend/`
+- **Preview site:** `npm start` from `preview-site/` (port 3000) — static HTML/CSS/JS, no build step
 - **Database:** Start Docker daemon with `sudo dockerd &>/tmp/dockerd.log &`, wait ~3s, then start the DB container. Credentials must match `finance-app-backend/.env` `DATABASE_URL`. See `docker-compose.yml` for reference config.
 
 ### Lint / Test / Build

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinTrack — Personal Finance App</title> <!-- pragma: allowlist secret -->
+  <meta name="description" content="Take control of your finances with FinTrack. Track income &amp; expenses, set budgets, and reach savings goals — all in one beautiful app." /> <!-- pragma: allowlist secret -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ───── Navbar ───── -->
+  <nav class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+        </div>
+        FinTrack <!-- pragma: allowlist secret -->
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#screens">Screens</a>
+        <a href="#tech">Tech</a>
+      </div>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ───── Hero ───── -->
+  <header class="hero" id="hero">
+    <div class="hero-glow"></div>
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <p class="hero-badge">Personal Finance App</p>
+        <h1>Take control of<br/>your <span class="gradient-text">finances</span></h1>
+        <p class="hero-sub">Track income &amp; expenses, set budgets, visualize spending patterns, and reach your savings goals — all in one beautifully designed app.</p>
+        <div class="hero-actions">
+          <a href="#screens" class="btn btn-primary">Explore App</a>
+          <a href="#features" class="btn btn-ghost">See Features</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-number">6</span>
+            <span class="stat-label">Core Screens</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat">
+            <span class="stat-number">2</span>
+            <span class="stat-label">Themes</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat">
+            <span class="stat-number">5</span>
+            <span class="stat-label">Currencies</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-phone">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen" id="heroScreen">
+            <!-- Dashboard SVG injected here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ───── Features ───── -->
+  <section class="features" id="features">
+    <div class="container">
+      <p class="section-label">Features</p>
+      <h2 class="section-title">Everything you need to<br/>manage your money</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon" style="--accent:#4F46E5;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </div>
+          <h3>Dashboard</h3>
+          <p>See your total balance, income vs. expenses, budget progress, and recent transactions at a glance.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="--accent:#10B981;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <h3>Transactions</h3>
+          <p>Log every income and expense with categories, dates, and notes. Search, filter, and review anytime.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="--accent:#F59E0B;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+          </div>
+          <h3>Analytics</h3>
+          <p>Understand spending patterns with bar charts, pie charts, and top-category breakdowns by month, quarter, or year.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="--accent:#EF4444;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <h3>Budgets</h3>
+          <p>Set monthly spending limits per category. Get visual warnings when you're approaching or exceeding a budget.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="--accent:#8B5CF6;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h3>Savings Goals</h3>
+          <p>Create savings targets with deadlines. Track your progress toward vacations, emergency funds, and more.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="--accent:#0EA5E9;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <h3>Personalization</h3>
+          <p>Light &amp; dark themes, multiple languages, five currencies with real-time exchange-rate conversion.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── Screens Carousel ───── -->
+  <section class="screens" id="screens">
+    <div class="container">
+      <p class="section-label">App Screens</p>
+      <h2 class="section-title">A tour through FinTrack</h2> <!-- pragma: allowlist secret -->
+      <div class="carousel-wrapper">
+        <button class="carousel-btn carousel-prev" id="prevBtn" aria-label="Previous screen">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="carousel" id="carousel"></div>
+        <button class="carousel-btn carousel-next" id="nextBtn" aria-label="Next screen">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="carousel-dots" id="carouselDots"></div>
+      <p class="carousel-label" id="carouselLabel"></p>
+    </div>
+  </section>
+
+  <!-- ───── Tech Stack ───── -->
+  <section class="tech" id="tech">
+    <div class="container">
+      <p class="section-label">Built With</p>
+      <h2 class="section-title">Modern tech, robust architecture</h2>
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tech-layer">Frontend</div>
+          <h3>React Native + Expo</h3>
+          <p>One codebase for iOS, Android, and Web. File-based routing, reanimated transitions, and glassmorphism UI.</p>
+        </div>
+        <div class="tech-card">
+          <div class="tech-layer">Backend</div>
+          <h3>FastAPI + Python</h3>
+          <p>High-performance async API with automatic OpenAPI docs, JWT authentication, and SQLAlchemy ORM.</p>
+        </div>
+        <div class="tech-card">
+          <div class="tech-layer">Database</div>
+          <h3>PostgreSQL</h3> <!-- pragma: allowlist secret -->
+          <p>Industry-standard relational database for safe, structured storage of all user financial data.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── CTA ───── -->
+  <section class="cta">
+    <div class="container cta-inner">
+      <div class="cta-glow"></div>
+      <h2>Ready to take control?</h2>
+      <p>Start tracking your finances with FinTrack today.</p> <!-- pragma: allowlist secret -->
+      <a href="#hero" class="btn btn-primary btn-lg">Get Started</a>
+    </div>
+  </section>
+
+  <!-- ───── Footer ───── -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <div class="nav-logo-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+        </div>
+        <span>FinTrack</span> <!-- pragma: allowlist secret -->
+      </div>
+      <p class="footer-copy">&copy; 2026 FinTrack. Personal finance tracking app.</p> <!-- pragma: allowlist secret -->
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

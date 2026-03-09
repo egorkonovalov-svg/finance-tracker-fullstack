@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="390" height="844">
+  <rect width="390" height="844" fill="#F5F3FF"/>
+  <rect x="159" y="80" width="72" height="72" rx="36" fill="#4F46E514" stroke="#4F46E5" stroke-width="1"/>
+  <text x="195" y="185" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="bold" fill="#111827">Welcome back</text>
+  <text x="195" y="212" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#6B7280">Sign in to continue</text>
+  <rect x="24" y="240" width="342" height="44" rx="16" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="115" y="268" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#4F46E5">Log In</text>
+  <text x="275" y="268" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#9CA3AF">Sign Up</text>
+  <rect x="24" y="310" width="342" height="48" rx="12" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <text x="45" y="340" font-family="sans-serif" font-size="13" fill="#6B7280">Email</text>
+  <rect x="24" y="370" width="342" height="48" rx="12" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <text x="45" y="400" font-family="sans-serif" font-size="13" fill="#6B7280">Password</text>
+  <rect x="24" y="440" width="342" height="52" rx="16" fill="#4F46E5"/>
+  <text x="195" y="473" text-anchor="middle" font-family="sans-serif" font-size="17" font-weight="600" fill="#FFFFFF">Log In</text>
+  <text x="195" y="530" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#9CA3AF">or continue with</text>
+  <rect x="24" y="565" width="165" height="48" rx="16" fill="rgba(255,255,255,0.6)" stroke="#E5E7EB"/>
+  <text x="106" y="595" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#111827">Google</text>
+  <rect x="201" y="565" width="165" height="48" rx="16" fill="#000"/>
+  <text x="283" y="595" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#FFF">Apple</text>
+</svg>
