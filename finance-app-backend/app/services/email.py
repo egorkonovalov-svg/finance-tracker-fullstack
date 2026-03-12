@@ -55,5 +55,12 @@ async def send_verification_email(to: str, code: str) -> None:
             start_tls=True,
             timeout=10,
         )
-    except Exception:
-        logger.exception("Failed to send verification email to %s", to)
+    except Exception as exc:
+        # Avoid noisy tracebacks when SMTP is unreachable or misconfigured.
+        # Log a concise error instead so local development logs stay readable.
+        logger.error(
+            "Failed to send verification email to %s via SMTP (%s: %s)",
+            to,
+            type(exc).__name__,
+            str(exc),
+        )
