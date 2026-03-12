@@ -165,11 +165,11 @@ export const Radius = {
 // ─── Typography ──────────────────────────────────────────────────────────────
 
 export const FontFamily = {
-  heading: 'Outfit_700Bold',
-  headingMedium: 'Outfit_600SemiBold',
-  body: 'DMSans_400Regular',
-  bodyMedium: 'DMSans_500Medium',
-  bodySemiBold: 'DMSans_600SemiBold',
+  heading: 'Manrope_700Bold',
+  headingMedium: 'Manrope_600SemiBold',
+  body: 'Manrope_400Regular',
+  bodyMedium: 'Manrope_500Medium',
+  bodySemiBold: 'Manrope_600SemiBold',
   mono: Platform.OS === 'ios' ? 'ui-monospace' : 'monospace',
 } as const;
 

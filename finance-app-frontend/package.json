@@ -12,8 +12,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@expo-google-fonts/dm-sans": "^0.4.2",
-    "@expo-google-fonts/outfit": "^0.4.3",
+    "@expo-google-fonts/manrope": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
@@ -68,6 +67,8 @@
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*)"
     ],
-    "testMatch": ["**/__tests__/**/*.test.[jt]s?(x)"]
+    "testMatch": [
+      "**/__tests__/**/*.test.[jt]s?(x)"
+    ]
   }
 }

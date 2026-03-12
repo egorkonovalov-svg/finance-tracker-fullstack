@@ -39,7 +39,7 @@ export default function TabLayout() {
         tabBarShowLabel: true,
         tabBarLabelStyle: {
           fontSize: 10,
-          fontFamily: 'DMSans_500Medium',
+          fontFamily: 'Manrope_500Medium',
           marginTop: -2,
         },
         tabBarStyle: {
