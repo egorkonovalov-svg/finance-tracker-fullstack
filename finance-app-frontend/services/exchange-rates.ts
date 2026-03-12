@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const API_URL = 'https://open.er-api.com/v6/latest/USD';
+const API_URL = 'https://open.er-api.com/v6/latest/RUB';
 const CACHE_KEY = '@fintrack_rates';
 const CACHE_TS_KEY = '@fintrack_rates_ts';
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -13,11 +13,11 @@ const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
  * AsyncStorage cache are unavailable. Keeps the app functional offline.
  */
 export const FALLBACK_RATES: Record<string, number> = {
-  USD: 1,
-  EUR: 0.92,
-  GBP: 0.79,
-  RUB: 92.5,
-  JPY: 155.0,
+  RUB: 1,
+  USD: 0.0108,
+  EUR: 0.0099,
+  GBP: 0.0085,
+  JPY: 1.674,
 };
 
 // ─── In-memory cache ─────────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ async function writeCachedRates(rates: Record<string, number>): Promise<void> {
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 /**
- * Fetches current exchange rates with USD as the base currency.
+ * Fetches current exchange rates with RUB as the base currency.
  *
  * Resolution order:
  * 1. In-memory cache (if < 1 hour old)

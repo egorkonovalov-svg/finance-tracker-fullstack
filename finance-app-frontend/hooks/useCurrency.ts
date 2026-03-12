@@ -6,7 +6,7 @@ import { localeToBCP47 } from '@/hooks/useTranslation';
 /**
  * Convenience hook for currency conversion and formatting.
  *
- * All stored amounts are in USD. This hook reads the selected currency,
+ * All stored amounts are in RUB. This hook reads the selected currency,
  * locale, and live exchange rates from AppContext, then provides helpers to
  * convert and format on the fly.
  */
@@ -15,7 +15,7 @@ export function useCurrency() {
   const bcp47 = localeToBCP47(locale);
 
   const rate = useMemo(
-    () => (currency === 'USD' ? 1 : exchangeRates[currency] ?? 1),
+    () => (currency === 'RUB' ? 1 : exchangeRates[currency] ?? 1),
     [currency, exchangeRates],
   );
 
@@ -24,18 +24,18 @@ export function useCurrency() {
     [currency],
   );
 
-  /** Convert a USD amount to the selected currency (number only). */
+  /** Convert a RUB amount to the selected currency (number only). */
   const convert = useCallback(
-    (amountUSD: number): number => amountUSD * rate,
+    (amountRUB: number): number => amountRUB * rate,
     [rate],
   );
 
   /**
-   * Convert a USD amount and return a fully formatted string
+   * Convert a RUB amount and return a fully formatted string
    * with the correct symbol, decimal places, and grouping.
    */
   const convertAndFormat = useCallback(
-    (amountUSD: number): string => formatCurrency(amountUSD, currency, rate, bcp47),
+    (amountRUB: number): string => formatCurrency(amountRUB, currency, rate, bcp47),
     [currency, rate, bcp47],
   );
 
@@ -44,13 +44,13 @@ export function useCurrency() {
     currency,
     /** Currency symbol, e.g. "€" */
     symbol,
-    /** Exchange rate from USD to selected currency */
+    /** Exchange rate from RUB to selected currency */
     rate,
     /** Whether rates are still loading from the API */
     ratesLoading,
-    /** Convert USD amount to target currency (number) */
+    /** Convert RUB amount to target currency (number) */
     convert,
-    /** Convert + format USD amount to a display string */
+    /** Convert + format RUB amount to a display string */
     convertAndFormat,
   };
 }

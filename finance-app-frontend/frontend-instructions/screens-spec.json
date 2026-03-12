@@ -170,7 +170,7 @@
             { "name": "Header", "elements": ["Settings"] },
             { "name": "APPEARANCE", "elements": ["Dark Mode toggle", "Light / Dark / System pills"] },
             { "name": "LANGUAGE", "elements": ["Locale pills: English / Russian"] },
-            { "name": "CURRENCY", "elements": ["Currency row (collapsible)", "Currency option list (USD, EUR, RUB, GBP, JPY with symbols)", "Note: amounts stored in USD, displayed in selected currency"] },
+            { "name": "CURRENCY", "elements": ["Currency row (collapsible)", "Currency option list (USD, EUR, RUB, GBP, JPY with symbols)", "Note: amounts stored in RUB, displayed in selected currency"] },
             { "name": "DATA", "elements": ["Manage Categories row"] },
             { "name": "ABOUT", "elements": ["FinTrack v1.0.0", "Personal finance tracking app"] },
             { "name": "Logout", "elements": ["Log out button"] }

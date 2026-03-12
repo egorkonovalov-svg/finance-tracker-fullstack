@@ -198,15 +198,15 @@ export const CURRENCY_SYMBOLS: Record<string, string> = {
 const ZERO_DECIMAL_CURRENCIES = new Set(['JPY', 'KRW', 'VND', 'ISK', 'HUF']);
 
 /**
- * Format and optionally convert a USD amount into the target currency.
+ * Format and optionally convert a RUB amount into the target currency.
  *
- * @param amountUSD - The amount in USD (base currency)
+ * @param amountRUB - The amount in RUB (base currency)
  * @param currency  - Target currency code (e.g. "EUR")
- * @param rate      - Exchange rate from USD -> target. Defaults to 1 (no conversion).
+ * @param rate      - Exchange rate from RUB -> target. Defaults to 1 (no conversion).
  * @param locale    - BCP 47 locale for number formatting (e.g. "en-US", "ru-RU"). Optional.
  */
-export function formatCurrency(amountUSD: number, currency: string = 'USD', rate: number = 1, locale?: string): string {
-  const converted = amountUSD * rate;
+export function formatCurrency(amountRUB: number, currency: string = 'RUB', rate: number = 1, locale?: string): string {
+  const converted = amountRUB * rate;
   const formatLocale = locale ?? undefined;
 
   try {

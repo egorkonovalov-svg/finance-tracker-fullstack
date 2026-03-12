@@ -52,7 +52,7 @@ const initialState: AppState = {
   budgets: [],
   budgetSummary: null,
   goals: [],
-  currency: 'USD',
+  currency: 'RUB',
   locale: 'en',
   exchangeRates: FALLBACK_RATES,
   ratesLoading: true,

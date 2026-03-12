@@ -14,9 +14,9 @@ import { FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/them
 import type { SupportedCurrency } from '@/types';
 
 const CURRENCIES: { value: SupportedCurrency; labelKey: string; symbol: string }[] = [
+  { value: 'RUB', labelKey: 'settings.currencies.rub', symbol: '₽' },
   { value: 'USD', labelKey: 'settings.currencies.usd', symbol: '$' },
   { value: 'EUR', labelKey: 'settings.currencies.eur', symbol: '€' },
-  { value: 'RUB', labelKey: 'settings.currencies.rub', symbol: '₽' },
   { value: 'GBP', labelKey: 'settings.currencies.gbp', symbol: '£' },
   { value: 'JPY', labelKey: 'settings.currencies.jpy', symbol: '¥' },
 ];

@@ -1,15 +1,15 @@
 import { formatCurrency } from '@/constants/theme';
 
 describe('formatCurrency', () => {
-  it('formats USD amount with default rate', () => {
-    expect(formatCurrency(100)).toMatch(/\$100\.00/);
-    expect(formatCurrency(0)).toMatch(/\$0\.00/);
-    expect(formatCurrency(-50.5)).toMatch(/-\$50\.50/);
+  it('formats RUB amount with default rate', () => {
+    expect(formatCurrency(100)).toMatch(/100[\.,]00/);
+    expect(formatCurrency(0)).toMatch(/0[\.,]00/);
+    expect(formatCurrency(-50.5)).toMatch(/-.*50[\.,]50/);
   });
 
   it('converts with exchange rate', () => {
-    const formatted = formatCurrency(100, 'USD', 0.92);
-    expect(formatted).toMatch(/92\.00/);
+    const formatted = formatCurrency(100, 'USD', 0.0108);
+    expect(formatted).toMatch(/1[\.,]08/);
   });
 
   it('uses zero decimals for JPY', () => {

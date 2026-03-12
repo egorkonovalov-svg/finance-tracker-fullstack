@@ -50,12 +50,12 @@ export default function AnalyticsScreen() {
     });
     return Object.entries(map)
       .sort((a, b) => b[1] - a[1])
-      .map(([name, amountUSD]) => {
+      .map(([name, amountRUB]) => {
         const cat = categories.find((c) => c.name === name);
         return {
           name,
-          amount: convert(amountUSD),
-          amountUSD,
+          amount: convert(amountRUB),
+          amountRUB,
           color: cat?.color ?? '#6B7280',
           legendFontColor: colors.textSecondary,
           legendFontSize: 12,
@@ -214,7 +214,7 @@ export default function AnalyticsScreen() {
                   </View>
                   <Text style={[styles.topCatName, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
                   <Text style={[styles.topCatAmount, { color: colors.textSecondary }]}>
-                    {convertAndFormat(item.amountUSD)}
+                    {convertAndFormat(item.amountRUB)}
                   </Text>
                 </View>
               );

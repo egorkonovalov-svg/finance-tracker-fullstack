@@ -62,7 +62,7 @@
   "add.income": "Income",
   "add.amount": "Amount",
   "add.amountPlaceholder": "0.00",
-  "add.storedInUSD": "Stored in USD",
+  "add.storedInRUB": "Stored in RUB",
   "add.category": "Category",
   "add.notePlaceholder": "Add a note...",
   "add.recurring": "Recurring transaction",

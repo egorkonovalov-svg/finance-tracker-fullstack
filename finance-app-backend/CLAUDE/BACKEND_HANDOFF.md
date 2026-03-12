@@ -27,7 +27,7 @@ The frontend reads from `EXPO_PUBLIC_API_URL` env variable, defaulting to the ab
 | Auth header | `Authorization: Bearer <access_token>` on all protected endpoints |
 | IDs | Strings (UUIDs recommended) |
 | Dates | ISO 8601 strings, e.g. `"2026-02-17T10:30:00.000Z"` |
-| Amounts | Numbers (floats). All amounts stored in **USD** |
+| Amounts | Numbers (floats). All amounts stored in **RUB** |
 | Deletion | Returns `204 No Content` (no response body) |
 | Errors | Non-2xx status with JSON body: `{ "detail": "error message" }` |
 
@@ -201,7 +201,7 @@ List transactions with optional filtering and pagination.
       "id": "tx-uuid",
       "type": "expense",
       "amount": 42.50,
-      "currency": "USD",
+      "currency": "RUB",
       "category": "Food & Drinks",
       "note": "Lunch at café",
       "date": "2026-02-17T12:30:00.000Z",
@@ -234,7 +234,7 @@ Create a new transaction.
 {
   "type": "expense",
   "amount": 42.50,
-  "currency": "USD",
+  "currency": "RUB",
   "category": "Food & Drinks",
   "note": "Lunch at café",
   "date": "2026-02-17T12:30:00.000Z",
@@ -245,8 +245,8 @@ Create a new transaction.
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `type` | `"income"` or `"expense"` | Yes | |
-| `amount` | number | Yes | Stored in USD |
-| `currency` | string | Yes | Currency code at time of entry (e.g. `"USD"`, `"EUR"`) |
+| `amount` | number | Yes | Stored in RUB |
+| `currency` | string | Yes | Currency code at time of entry (e.g. `"RUB"`, `"EUR"`) |
 | `category` | string | Yes | Category name |
 | `note` | string | No | User note |
 | `date` | string | Yes | ISO 8601 |
@@ -320,7 +320,7 @@ Aggregated statistics for the dashboard and analytics screens.
 Notes:
 - `by_category` should include the category color from the categories table.
 - `daily` should cover at least the last 7 days within the requested month.
-- All amounts are in USD.
+- All amounts are in RUB.
 
 ---
 
@@ -415,7 +415,7 @@ Delete a category.
 | `id` | UUID | Primary key |
 | `user_id` | UUID | Foreign key -> users.id, not null |
 | `type` | VARCHAR(10) | Not null (`"income"`, `"expense"`) |
-| `amount` | DECIMAL(12,2) | Not null (in USD) |
+| `amount` | DECIMAL(12,2) | Not null (in RUB) |
 | `currency` | VARCHAR(3) | Not null |
 | `category` | VARCHAR(100) | Not null (category name) |
 | `note` | TEXT | Nullable |
@@ -465,7 +465,7 @@ DEFAULT_CATEGORIES = [
 
 ## 6. What the Backend Does NOT Need
 
-- **Exchange rates** -- the frontend fetches these directly from `https://open.er-api.com/v6/latest/USD` and caches locally.
+- **Exchange rates** -- the frontend fetches these directly from `https://open.er-api.com/v6/latest/RUB` and caches locally.
 - **User preferences** (currency, theme, locale) -- stored in AsyncStorage on the device.
 - **Onboarding state** -- stored locally.
 

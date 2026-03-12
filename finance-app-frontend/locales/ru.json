@@ -62,7 +62,7 @@
   "add.income": "Доход",
   "add.amount": "Сумма",
   "add.amountPlaceholder": "0.00",
-  "add.storedInUSD": "Хранится в USD",
+  "add.storedInRUB": "Хранится в рублях",
   "add.category": "Категория",
   "add.notePlaceholder": "Добавить заметку...",
   "add.recurring": "Повторяющаяся операция",

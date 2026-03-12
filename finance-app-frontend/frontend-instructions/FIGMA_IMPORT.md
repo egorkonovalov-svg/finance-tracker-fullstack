@@ -72,7 +72,7 @@ Use the same frame size (390×844) for each tab screen so the tab bar aligns.
 | Transactions  | Transactions    | Title, search, filter chips (All / Expense / Income), list with date sections (Today, Yesterday, …) and transaction rows |
 | Add           | New Transaction | Title, Expense/Income toggle, Amount, Category chips, Note, Date, Recurring, “Add Transaction” button |
 | Analytics     | Analytics       | Title, Period (Month / Quarter / Year), bar chart (last 7 days), pie chart (expenses by category), Top Categories list (top 5 categories with icon, name, amount) |
-| Settings      | Settings        | Title, LANGUAGE (English / Russian), APPEARANCE (Dark mode + Light/Dark/System), CURRENCY (picker: USD, EUR, RUB, GBP, JPY — amounts stored in USD, displayed in chosen currency), DATA (Manage Categories), ABOUT, Log out |
+| Settings      | Settings        | Title, LANGUAGE (English / Russian), APPEARANCE (Dark mode + Light/Dark/System), CURRENCY (picker: USD, EUR, RUB, GBP, JPY — amounts stored in RUB, displayed in chosen currency), DATA (Manage Categories), ABOUT, Log out |
 
 ### Secondary
 

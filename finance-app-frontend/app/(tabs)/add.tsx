@@ -151,9 +151,9 @@ export default function AddTransactionScreen() {
                 accessibilityLabel={t('a11y.transactionAmount')}
               />
             </View>
-            {currency !== 'USD' && amount !== '' && parseFloat(amount) > 0 && (
+            {currency !== 'RUB' && amount !== '' && parseFloat(amount) > 0 && (
               <Text style={[styles.usdHint, { color: colors.textMuted }]}>
-                {t('add.storedInUSD')} ≈ ${(parseFloat(amount) / rate).toFixed(2)} USD
+                {t('add.storedInRUB')} ≈ {(parseFloat(amount) / rate).toFixed(2)} ₽
               </Text>
             )}
           </GlassCard>
