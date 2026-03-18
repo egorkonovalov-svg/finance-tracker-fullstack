@@ -29,7 +29,7 @@ services:
 
   app:
     build:
-      context: "./finance-app-backend"
+      context: "./backend"
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
@@ -53,7 +53,7 @@ services:
 
   frontend:
     build:
-      context: ./finance-app-frontend
+      context: ./frontend
       dockerfile: Dockerfile
       target: dev
     ports:
@@ -63,14 +63,14 @@ services:
       - EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-http://localhost:8000/api/v1}
       - EXPO_PUBLIC_USE_MOCK=${EXPO_PUBLIC_USE_MOCK:-false}
     volumes:
-      - ./finance-app-frontend:/app
+      - ./frontend:/app
       - /app/node_modules
     stdin_open: true
     tty: true
 
   frontend-web:
     build:
-      context: ./finance-app-frontend
+      context: ./frontend
       dockerfile: Dockerfile
       target: web
     ports:
