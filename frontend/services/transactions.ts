@@ -86,14 +86,17 @@ async function mockGetStats(month?: string): Promise<TransactionStats> {
     return d.getFullYear() === y && d.getMonth() + 1 === m;
   });
 
-  const totalIncome = monthTxs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const totalExpenses = monthTxs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  // Use amount_rub for aggregation (RUB equivalent); fall back to amount for RUB transactions
+  const rubAmount = (t: Transaction) => t.amount_rub ?? t.amount;
+
+  const totalIncome = monthTxs.filter((t) => t.type === 'income').reduce((s, t) => s + rubAmount(t), 0);
+  const totalExpenses = monthTxs.filter((t) => t.type === 'expense').reduce((s, t) => s + rubAmount(t), 0);
 
   const catMap: Record<string, number> = {};
   monthTxs
     .filter((t) => t.type === 'expense')
     .forEach((t) => {
-      catMap[t.category] = (catMap[t.category] ?? 0) + t.amount;
+      catMap[t.category] = (catMap[t.category] ?? 0) + rubAmount(t);
     });
 
   const byCategory = Object.entries(catMap).map(([category, amount]) => ({
@@ -111,8 +114,8 @@ async function mockGetStats(month?: string): Promise<TransactionStats> {
     const dayTxs = mockStore.filter((tx) => tx.date.slice(0, 10) === dateStr);
     daily.push({
       date: dateStr,
-      income: dayTxs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0),
-      expense: dayTxs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+      income: dayTxs.filter((t) => t.type === 'income').reduce((s, t) => s + rubAmount(t), 0),
+      expense: dayTxs.filter((t) => t.type === 'expense').reduce((s, t) => s + rubAmount(t), 0),
     });
   }
 

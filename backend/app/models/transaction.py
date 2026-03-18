@@ -19,8 +19,9 @@ class Transaction(Base):
         UUID(as_uuid=True), ForeignKey("user.id"), nullable=False
     )
     type: Mapped[str] = mapped_column(String(10), nullable=False)
-    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)  # in original currency
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)  # original currency code
+    amount_rub: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)  # RUB equivalent
     category: Mapped[str] = mapped_column(String(100), nullable=False)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

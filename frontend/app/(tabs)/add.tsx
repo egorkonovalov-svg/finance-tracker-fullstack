@@ -22,18 +22,19 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { useTranslation, localeToBCP47 } from '@/hooks/useTranslation';
 import { GlassCard } from '@/components/ui/glass-card';
 import { CategoryChip } from '@/components/category-chip';
-import { FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/theme';
-import type { TransactionType } from '@/types';
+import { CURRENCY_SYMBOLS, FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/theme';
+import type { SupportedCurrency, TransactionType } from '@/types';
 
 export default function AddTransactionScreen() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
-  const { categories, addTransaction } = useApp();
-  const { symbol, currency, rate } = useCurrency();
+  const { categories, addTransaction, exchangeRates } = useApp();
+  const { currency } = useCurrency();
   const { t, locale } = useTranslation();
   const dateLocale = localeToBCP47(locale);
 
   const [type, setType] = useState<TransactionType>('expense');
+  const [txCurrency, setTxCurrency] = useState<SupportedCurrency>(currency);
   const [amount, setAmount] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [note, setNote] = useState('');
@@ -41,6 +42,10 @@ export default function AddTransactionScreen() {
   const [recurring, setRecurring] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const txRate = txCurrency === 'RUB' ? 1 : (exchangeRates[txCurrency] ?? 1);
+  const txSymbol = CURRENCY_SYMBOLS[txCurrency] ?? txCurrency;
+  const amountRub = amount && parseFloat(amount) > 0 ? parseFloat(amount) / txRate : 0;
 
   // Button scale animation
   const buttonScale = useSharedValue(1);
@@ -69,8 +74,9 @@ export default function AddTransactionScreen() {
     try {
       await addTransaction({
         type,
-        amount: parseFloat(amount) / rate,
-        currency,
+        amount: parseFloat(amount),
+        currency: txCurrency,
+        amount_rub: amountRub,
         category: selectedCategory,
         note: note.trim() || undefined,
         date: date.toISOString(),
@@ -136,9 +142,23 @@ export default function AddTransactionScreen() {
         <Animated.View entering={FadeInUp.delay(100).duration(400)} style={styles.section}>
           <GlassCard padding={24} radius={20}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>{t('add.amount')}</Text>
+            {/* Currency picker */}
+            <View style={styles.currencyPickerRow}>
+              {(Object.keys(CURRENCY_SYMBOLS) as SupportedCurrency[]).map((cur) => (
+                <Pressable
+                  key={cur}
+                  style={[styles.currencyPill, txCurrency === cur && { backgroundColor: accentColor + '22', borderColor: accentColor }]}
+                  onPress={() => setTxCurrency(cur)}
+                >
+                  <Text style={[styles.currencyPillText, { color: txCurrency === cur ? accentColor : colors.textMuted }]}>
+                    {CURRENCY_SYMBOLS[cur]} {cur}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
             <View style={styles.amountRow}>
               <Text style={[styles.currencySymbol, { color: accentColor }]}>
-                {symbol}
+                {txSymbol}
               </Text>
               <TextInput
                 style={[styles.amountInput, { color: colors.text, borderBottomColor: accentColor }]}
@@ -151,9 +171,9 @@ export default function AddTransactionScreen() {
                 accessibilityLabel={t('a11y.transactionAmount')}
               />
             </View>
-            {currency !== 'RUB' && amount !== '' && parseFloat(amount) > 0 && (
+            {txCurrency !== 'RUB' && amountRub > 0 && (
               <Text style={[styles.usdHint, { color: colors.textMuted }]}>
-                {t('add.storedInRUB')} ≈ {(parseFloat(amount) / rate).toFixed(2)} ₽
+                ≈ {amountRub.toFixed(2)} ₽
               </Text>
             )}
           </GlassCard>
@@ -302,6 +322,23 @@ const styles = StyleSheet.create({
     fontSize: FontSize['4xl'],
     borderBottomWidth: 2,
     paddingBottom: 4,
+  },
+  currencyPickerRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: Spacing.md,
+  },
+  currencyPill: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  currencyPillText: {
+    fontFamily: FontFamily.bodyMedium,
+    fontSize: FontSize.sm,
   },
   usdHint: {
     fontFamily: FontFamily.body,

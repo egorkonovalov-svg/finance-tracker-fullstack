@@ -20,38 +20,44 @@ import { useApp } from '@/context/AppContext';
 import { useTranslation, localeToBCP47 } from '@/hooks/useTranslation';
 import { GlassCard } from '@/components/ui/glass-card';
 import { CategoryChip } from '@/components/category-chip';
-import { FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/theme';
+import { CURRENCY_SYMBOLS, FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/theme';
 import { useCurrency } from '@/hooks/useCurrency';
-import type { TransactionType } from '@/types';
+import type { SupportedCurrency, TransactionType } from '@/types';
 
 export default function TransactionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, isDark } = useTheme();
-  const { transactions, categories, updateTransaction, removeTransaction, locale } = useApp();
+  const { transactions, categories, updateTransaction, removeTransaction, locale, exchangeRates } = useApp();
   const { t } = useTranslation();
-  const { convertAndFormat, convert, rate } = useCurrency();
+  const { convertAndFormat, currency: displayCurrency } = useCurrency();
   const dateLocale = localeToBCP47(locale);
 
   const tx = transactions.find((t) => t.id === id);
 
   const [editing, setEditing] = useState(false);
   const [type, setType] = useState<TransactionType>(tx?.type ?? 'expense');
-  const [amount, setAmount] = useState(tx ? convert(tx.amount).toFixed(2) : '');
+  const [txCurrency, setTxCurrency] = useState<SupportedCurrency>((tx?.currency as SupportedCurrency) ?? 'RUB');
+  const [amount, setAmount] = useState(tx ? tx.amount.toFixed(2) : '');
   const [selectedCategory, setSelectedCategory] = useState(tx?.category ?? '');
   const [note, setNote] = useState(tx?.note ?? '');
   const [date, setDate] = useState(tx ? new Date(tx.date) : new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  const txRate = txCurrency === 'RUB' ? 1 : (exchangeRates[txCurrency] ?? 1);
+  const txSymbol = CURRENCY_SYMBOLS[txCurrency] ?? txCurrency;
+  const editAmountRub = amount && parseFloat(amount) > 0 ? parseFloat(amount) / txRate : 0;
+
   useEffect(() => {
     if (tx) {
       setType(tx.type);
-      setAmount(convert(tx.amount).toFixed(2));
+      setTxCurrency((tx.currency as SupportedCurrency) ?? 'RUB');
+      setAmount(tx.amount.toFixed(2));
       setSelectedCategory(tx.category);
       setNote(tx.note ?? '');
       setDate(new Date(tx.date));
     }
-  }, [tx, convert]);
+  }, [tx]);
 
   if (!tx) {
     return (
@@ -73,7 +79,9 @@ export default function TransactionDetailScreen() {
     try {
       await updateTransaction(tx.id, {
         type,
-        amount: parseFloat(amount) / rate,
+        amount: parseFloat(amount),
+        currency: txCurrency,
+        amount_rub: editAmountRub,
         category: selectedCategory,
         note: note.trim() || undefined,
         date: date.toISOString(),
@@ -116,8 +124,13 @@ export default function TransactionDetailScreen() {
               </Text>
             </View>
             <Text style={[styles.detailAmount, { color: accentColor }]}>
-              {tx.type === 'income' ? '+' : '-'}{convertAndFormat(tx.amount)}
+              {tx.type === 'income' ? '+' : '-'}{CURRENCY_SYMBOLS[tx.currency] ?? tx.currency}{tx.amount.toFixed(2)}
             </Text>
+            {tx.currency !== displayCurrency && tx.amount_rub != null && (
+              <Text style={[styles.detailAmountEquiv, { color: colors.textMuted }]}>
+                ≈ {convertAndFormat(tx.amount_rub)}
+              </Text>
+            )}
           </GlassCard>
 
           {/* Details */}
@@ -164,13 +177,37 @@ export default function TransactionDetailScreen() {
           {/* Amount */}
           <GlassCard padding={20} radius={16} style={{ marginTop: Spacing.lg }}>
             <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('detail.amount')}</Text>
-            <TextInput
-              style={[styles.editAmount, { color: colors.text, borderBottomColor: accentColor }]}
-              value={amount}
-              onChangeText={(text) => setAmount(text.replace(/[^0-9.]/g, ''))}
-              keyboardType="decimal-pad"
-              accessibilityLabel={t('a11y.editAmount')}
-            />
+            {/* Currency picker */}
+            <View style={styles.currencyPickerRow}>
+              {(Object.keys(CURRENCY_SYMBOLS) as SupportedCurrency[]).map((cur) => (
+                <Pressable
+                  key={cur}
+                  style={[styles.currencyPill, txCurrency === cur && { backgroundColor: accentColor + '22', borderColor: accentColor }]}
+                  onPress={() => setTxCurrency(cur)}
+                >
+                  <Text style={[styles.currencyPillText, { color: txCurrency === cur ? accentColor : colors.textMuted }]}>
+                    {CURRENCY_SYMBOLS[cur]} {cur}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+              <Text style={[styles.editAmount, { color: accentColor, fontSize: FontSize['2xl'], borderBottomWidth: 0, marginRight: 4 }]}>
+                {txSymbol}
+              </Text>
+              <TextInput
+                style={[styles.editAmount, { flex: 1, color: colors.text, borderBottomColor: accentColor }]}
+                value={amount}
+                onChangeText={(text) => setAmount(text.replace(/[^0-9.]/g, ''))}
+                keyboardType="decimal-pad"
+                accessibilityLabel={t('a11y.editAmount')}
+              />
+            </View>
+            {txCurrency !== 'RUB' && editAmountRub > 0 && (
+              <Text style={[styles.fieldLabel, { color: colors.textMuted, marginTop: Spacing.xs }]}>
+                ≈ {editAmountRub.toFixed(2)} ₽
+              </Text>
+            )}
           </GlassCard>
 
           {/* Category */}
@@ -261,6 +298,29 @@ const styles = StyleSheet.create({
   detailAmount: {
     fontFamily: FontFamily.heading,
     fontSize: FontSize['4xl'],
+  },
+  detailAmountEquiv: {
+    fontFamily: FontFamily.body,
+    fontSize: FontSize.sm,
+    marginTop: 4,
+  },
+  currencyPickerRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  currencyPill: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  currencyPillText: {
+    fontFamily: FontFamily.bodyMedium,
+    fontSize: FontSize.sm,
   },
   detailRow: {
     flexDirection: 'row',

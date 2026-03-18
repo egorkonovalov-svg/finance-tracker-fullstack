@@ -13,11 +13,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { useApp } from '@/context/AppContext';
-import { useTranslation, localeToBCP47 } from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { TransactionRow } from '@/components/transaction-row';
 import { GlassCard } from '@/components/ui/glass-card';
-import { FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/theme';
+import { CURRENCY_SYMBOLS, FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/theme';
 import type { Transaction, TransactionType } from '@/types';
+
+const CURRENCY_NAMES: Record<string, string> = {
+  RUB: 'Российский рубль / Russian Ruble',
+  USD: 'US Dollar',
+  EUR: 'Euro',
+  GBP: 'British Pound',
+  JPY: 'Japanese Yen',
+};
 
 type FilterType = 'all' | TransactionType;
 
@@ -25,8 +33,7 @@ export default function TransactionsScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { transactions, loading, loadTransactions, removeTransaction } = useApp();
-  const { t, locale } = useTranslation();
-  const dateLocale = localeToBCP47(locale);
+  const { t } = useTranslation();
 
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<FilterType>('all');
@@ -48,28 +55,27 @@ export default function TransactionsScreen() {
     return result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions, filterType, search]);
 
-  // ── Section grouping ───────────────────────────────────────────────────
+  // ── Section grouping (by currency) ─────────────────────────────────────
   const sections = useMemo(() => {
-    const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().slice(0, 10);
-
     const groups: Record<string, Transaction[]> = {};
     for (const tx of filtered) {
-      const dateStr = tx.date.slice(0, 10);
-      let label: string;
-      if (dateStr === todayStr) label = t('common.today');
-      else if (dateStr === yesterdayStr) label = t('common.yesterday');
-      else label = new Date(tx.date).toLocaleDateString(dateLocale, { month: 'long', day: 'numeric', year: 'numeric' });
-
-      if (!groups[label]) groups[label] = [];
-      groups[label].push(tx);
+      const cur = tx.currency ?? 'RUB';
+      if (!groups[cur]) groups[cur] = [];
+      groups[cur].push(tx);
     }
 
-    return Object.entries(groups).map(([title, data]) => ({ title, data }));
-  }, [filtered, t, dateLocale]);
+    // Order: RUB first, then others alphabetically
+    const ordered = Object.keys(groups).sort((a, b) => {
+      if (a === 'RUB') return -1;
+      if (b === 'RUB') return 1;
+      return a.localeCompare(b);
+    });
+
+    return ordered.map((cur) => ({
+      title: `${CURRENCY_SYMBOLS[cur] ?? cur} ${cur} · ${CURRENCY_NAMES[cur] ?? cur}`,
+      data: groups[cur],
+    }));
+  }, [filtered]);
 
   const onRefresh = useCallback(() => {
     loadTransactions();

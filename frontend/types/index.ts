@@ -5,8 +5,9 @@ export type TransactionType = 'income' | 'expense';
 export interface Transaction {
   id: string;
   type: TransactionType;
-  amount: number;
-  currency: string;
+  amount: number;        // original amount in `currency`
+  currency: string;      // original currency code
+  amount_rub?: number;   // RUB equivalent at time of entry (for aggregations)
   category: string;
   note?: string;
   date: string; // ISO 8601
@@ -15,8 +16,9 @@ export interface Transaction {
 
 export interface CreateTransactionPayload {
   type: TransactionType;
-  amount: number;
-  currency: string;
+  amount: number;        // original amount in `currency`
+  currency: string;      // original currency code
+  amount_rub?: number;   // RUB equivalent at time of entry
   category: string;
   note?: string;
   date: string;

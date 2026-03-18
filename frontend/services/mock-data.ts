@@ -25,30 +25,49 @@ function daysAgo(n: number): string {
   return d.toISOString();
 }
 
+// Fallback exchange rates (1 RUB → currency); used to compute amount_rub for mock data
+// Matches FALLBACK_RATES in services/exchange-rates.ts
+const RUB_PER: Record<string, number> = {
+  RUB: 1,
+  USD: 1 / 0.0108,   // ≈ 92.59
+  EUR: 1 / 0.0099,   // ≈ 101.01
+  GBP: 1 / 0.0085,   // ≈ 117.65
+  JPY: 1 / 1.674,    // ≈ 0.597
+};
+
+function toRub(amount: number, currency: string): number {
+  return Math.round(amount * (RUB_PER[currency] ?? 1) * 100) / 100;
+}
+
 export const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: 'tx-1',  type: 'income',  amount: 415000, currency: 'RUB', category: 'Зарплата',        note: 'Ежемесячная зарплата',       date: daysAgo(0)  },
-  { id: 'tx-2',  type: 'expense', amount: 3900,   currency: 'RUB', category: 'Еда и напитки',   note: 'Обед в кафе',                date: daysAgo(0)  },
-  { id: 'tx-3',  type: 'expense', amount: 1400,   currency: 'RUB', category: 'Транспорт',        note: 'Поездка на такси',           date: daysAgo(1)  },
-  { id: 'tx-4',  type: 'expense', amount: 12000,  currency: 'RUB', category: 'Покупки',          note: 'Новые наушники',             date: daysAgo(1)  },
-  { id: 'tx-5',  type: 'income',  amount: 74000,  currency: 'RUB', category: 'Фриланс',          note: 'Дизайн логотипа',            date: daysAgo(2)  },
-  { id: 'tx-6',  type: 'expense', amount: 6000,   currency: 'RUB', category: 'Развлечения',      note: 'Билеты на концерт',          date: daysAgo(2)  },
-  { id: 'tx-7',  type: 'expense', amount: 20300,  currency: 'RUB', category: 'Счета и услуги',   note: 'Счёт за электричество',      date: daysAgo(3), recurring: true },
-  { id: 'tx-8',  type: 'expense', amount: 3200,   currency: 'RUB', category: 'Еда и напитки',   note: 'Продукты в магазине',         date: daysAgo(3)  },
-  { id: 'tx-9',  type: 'expense', amount: 4600,   currency: 'RUB', category: 'Здоровье',         note: 'Абонемент в спортзал',       date: daysAgo(4), recurring: true },
-  { id: 'tx-10', type: 'income',  amount: 13900,  currency: 'RUB', category: 'Инвестиции',       note: 'Выплата дивидендов',         date: daysAgo(5)  },
-  { id: 'tx-11', type: 'expense', amount: 2600,   currency: 'RUB', category: 'Еда и напитки',   note: 'Суши на вынос',              date: daysAgo(5)  },
-  { id: 'tx-12', type: 'expense', amount: 1200,   currency: 'RUB', category: 'Развлечения',      note: 'Подписка на стриминг',       date: daysAgo(6), recurring: true },
-  { id: 'tx-13', type: 'expense', amount: 7800,   currency: 'RUB', category: 'Покупки',          note: 'Беговые кроссовки',          date: daysAgo(7)  },
-  { id: 'tx-14', type: 'expense', amount: 920,    currency: 'RUB', category: 'Образование',      note: 'Онлайн-курс',               date: daysAgo(7)  },
-  { id: 'tx-15', type: 'income',  amount: 23000,  currency: 'RUB', category: 'Фриланс',          note: 'Консультация',              date: daysAgo(8)  },
-  { id: 'tx-16', type: 'expense', amount: 4200,   currency: 'RUB', category: 'Транспорт',        note: 'Заправка на неделю',         date: daysAgo(9)  },
-  { id: 'tx-17', type: 'expense', amount: 18500,  currency: 'RUB', category: 'Подарки',          note: 'Подарок на день рождения',   date: daysAgo(10) },
-  { id: 'tx-18', type: 'expense', amount: 1700,   currency: 'RUB', category: 'Еда и напитки',   note: 'Утренний бранч',             date: daysAgo(11) },
-  { id: 'tx-19', type: 'income',  amount: 415000, currency: 'RUB', category: 'Зарплата',         note: 'Ежемесячная зарплата',       date: daysAgo(30) },
-  { id: 'tx-20', type: 'expense', amount: 110000, currency: 'RUB', category: 'Счета и услуги',   note: 'Оплата аренды',              date: daysAgo(30), recurring: true },
-  { id: 'tx-21', type: 'expense', amount: 6900,   currency: 'RUB', category: 'Здоровье',         note: 'Приём у врача',              date: daysAgo(14) },
-  { id: 'tx-22', type: 'expense', amount: 2950,   currency: 'RUB', category: 'Еда и напитки',   note: 'Вечер с пиццей',             date: daysAgo(12) },
-  { id: 'tx-23', type: 'income',  amount: 46000,  currency: 'RUB', category: 'Фриланс',          note: 'Обслуживание сайта',         date: daysAgo(15) },
-  { id: 'tx-24', type: 'expense', amount: 5100,   currency: 'RUB', category: 'Покупки',          note: 'Закупка книг',               date: daysAgo(16) },
-  { id: 'tx-25', type: 'expense', amount: 9200,   currency: 'RUB', category: 'Образование',      note: 'Курс по TypeScript',         date: daysAgo(20) },
+  // ─── RUB transactions ────────────────────────────────────────────────────
+  { id: 'tx-1',  type: 'income',  amount: 415000, currency: 'RUB', amount_rub: 415000, category: 'Зарплата',        note: 'Ежемесячная зарплата',       date: daysAgo(0)  },
+  { id: 'tx-2',  type: 'expense', amount: 3900,   currency: 'RUB', amount_rub: 3900,   category: 'Еда и напитки',   note: 'Обед в кафе',                date: daysAgo(0)  },
+  { id: 'tx-3',  type: 'expense', amount: 1400,   currency: 'RUB', amount_rub: 1400,   category: 'Транспорт',       note: 'Поездка на такси',           date: daysAgo(1)  },
+  { id: 'tx-6',  type: 'expense', amount: 6000,   currency: 'RUB', amount_rub: 6000,   category: 'Развлечения',     note: 'Билеты на концерт',          date: daysAgo(2)  },
+  { id: 'tx-7',  type: 'expense', amount: 20300,  currency: 'RUB', amount_rub: 20300,  category: 'Счета и услуги',  note: 'Счёт за электричество',      date: daysAgo(3), recurring: true },
+  { id: 'tx-8',  type: 'expense', amount: 3200,   currency: 'RUB', amount_rub: 3200,   category: 'Еда и напитки',   note: 'Продукты в магазине',        date: daysAgo(3)  },
+  { id: 'tx-9',  type: 'expense', amount: 4600,   currency: 'RUB', amount_rub: 4600,   category: 'Здоровье',        note: 'Абонемент в спортзал',       date: daysAgo(4), recurring: true },
+  { id: 'tx-10', type: 'income',  amount: 13900,  currency: 'RUB', amount_rub: 13900,  category: 'Инвестиции',      note: 'Выплата дивидендов',         date: daysAgo(5)  },
+  { id: 'tx-11', type: 'expense', amount: 2600,   currency: 'RUB', amount_rub: 2600,   category: 'Еда и напитки',   note: 'Суши на вынос',              date: daysAgo(5)  },
+  { id: 'tx-12', type: 'expense', amount: 1200,   currency: 'RUB', amount_rub: 1200,   category: 'Развлечения',     note: 'Подписка на стриминг',       date: daysAgo(6), recurring: true },
+  { id: 'tx-14', type: 'expense', amount: 920,    currency: 'RUB', amount_rub: 920,    category: 'Образование',     note: 'Онлайн-курс',                date: daysAgo(7)  },
+  { id: 'tx-16', type: 'expense', amount: 4200,   currency: 'RUB', amount_rub: 4200,   category: 'Транспорт',       note: 'Заправка на неделю',         date: daysAgo(9)  },
+  { id: 'tx-18', type: 'expense', amount: 1700,   currency: 'RUB', amount_rub: 1700,   category: 'Еда и напитки',   note: 'Утренний бранч',             date: daysAgo(11) },
+  { id: 'tx-19', type: 'income',  amount: 415000, currency: 'RUB', amount_rub: 415000, category: 'Зарплата',        note: 'Ежемесячная зарплата',       date: daysAgo(30) },
+  { id: 'tx-20', type: 'expense', amount: 110000, currency: 'RUB', amount_rub: 110000, category: 'Счета и услуги',  note: 'Оплата аренды',              date: daysAgo(30), recurring: true },
+  { id: 'tx-21', type: 'expense', amount: 6900,   currency: 'RUB', amount_rub: 6900,   category: 'Здоровье',        note: 'Приём у врача',              date: daysAgo(14) },
+  { id: 'tx-22', type: 'expense', amount: 2950,   currency: 'RUB', amount_rub: 2950,   category: 'Еда и напитки',   note: 'Вечер с пиццей',             date: daysAgo(12) },
+  { id: 'tx-25', type: 'expense', amount: 9200,   currency: 'RUB', amount_rub: 9200,   category: 'Образование',     note: 'Курс по TypeScript',         date: daysAgo(20) },
+
+  // ─── USD transactions ────────────────────────────────────────────────────
+  { id: 'tx-4',  type: 'expense', amount: 130,    currency: 'USD', amount_rub: toRub(130,  'USD'), category: 'Покупки',     note: 'Новые наушники',           date: daysAgo(1)  },
+  { id: 'tx-5',  type: 'income',  amount: 800,    currency: 'USD', amount_rub: toRub(800,  'USD'), category: 'Фриланс',     note: 'Дизайн логотипа',          date: daysAgo(2)  },
+  { id: 'tx-15', type: 'income',  amount: 250,    currency: 'USD', amount_rub: toRub(250,  'USD'), category: 'Фриланс',     note: 'Консультация',             date: daysAgo(8)  },
+  { id: 'tx-24', type: 'expense', amount: 55,     currency: 'USD', amount_rub: toRub(55,   'USD'), category: 'Покупки',     note: 'Закупка книг',             date: daysAgo(16) },
+
+  // ─── EUR transactions ────────────────────────────────────────────────────
+  { id: 'tx-13', type: 'expense', amount: 66,     currency: 'EUR', amount_rub: toRub(66,   'EUR'), category: 'Покупки',     note: 'Беговые кроссовки',        date: daysAgo(7)  },
+  { id: 'tx-17', type: 'expense', amount: 185,    currency: 'EUR', amount_rub: toRub(185,  'EUR'), category: 'Подарки',     note: 'Подарок на день рождения', date: daysAgo(10) },
+  { id: 'tx-23', type: 'income',  amount: 455,    currency: 'EUR', amount_rub: toRub(455,  'EUR'), category: 'Фриланс',     note: 'Обслуживание сайта',       date: daysAgo(15) },
 ];

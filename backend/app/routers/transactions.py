@@ -26,6 +26,7 @@ def _to_response(tx: Transaction) -> TransactionResponse:
         type=tx.type,
         amount=float(tx.amount),
         currency=tx.currency,
+        amount_rub=float(tx.amount_rub) if tx.amount_rub is not None else None,
         category=tx.category,
         note=tx.note,
         date=tx.date,

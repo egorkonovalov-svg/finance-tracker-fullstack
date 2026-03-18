@@ -8,7 +8,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useApp } from '@/context/AppContext';
 import { useCurrency } from '@/hooks/useCurrency';
 import { localeToBCP47 } from '@/hooks/useTranslation';
-import { FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { CURRENCY_SYMBOLS, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 import type { Transaction } from '@/types';
 
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
 export function TransactionRow({ transaction, index = 0 }: Props) {
   const { colors } = useTheme();
   const { categories, locale } = useApp();
-  const { convertAndFormat } = useCurrency();
+  const { convertAndFormat, currency: displayCurrency } = useCurrency();
   const router = useRouter();
   const dateLocale = localeToBCP47(locale);
 
@@ -27,6 +27,9 @@ export function TransactionRow({ transaction, index = 0 }: Props) {
   const isIncome = transaction.type === 'income';
   const amountColor = isIncome ? colors.income : colors.expense;
   const sign = isIncome ? '+' : '-';
+
+  const txSymbol = CURRENCY_SYMBOLS[transaction.currency] ?? transaction.currency;
+  const showEquiv = transaction.currency !== displayCurrency && transaction.amount_rub != null;
 
   const displayDate = new Date(transaction.date).toLocaleDateString(dateLocale, {
     month: 'short',
@@ -43,7 +46,7 @@ export function TransactionRow({ transaction, index = 0 }: Props) {
           },
         ]}
         onPress={() => router.push(`/transaction/${transaction.id}`)}
-        accessibilityLabel={`${transaction.type} ${transaction.category} ${convertAndFormat(transaction.amount)}`}
+        accessibilityLabel={`${transaction.type} ${transaction.category} ${txSymbol}${transaction.amount.toFixed(2)}`}
       >
         <View style={[styles.iconWrap, { backgroundColor: (cat?.color ?? '#6B7280') + '18' }]}>
           <Ionicons name={(cat?.icon as keyof typeof Ionicons.glyphMap) ?? 'ellipsis-horizontal'} size={20} color={cat?.color ?? '#6B7280'} />
@@ -60,8 +63,13 @@ export function TransactionRow({ transaction, index = 0 }: Props) {
 
         <View style={styles.right}>
           <Animated.Text style={[styles.amount, { color: amountColor }]}>
-            {sign}{convertAndFormat(transaction.amount)}
+            {sign}{txSymbol}{transaction.amount.toFixed(2)}
           </Animated.Text>
+          {showEquiv && (
+            <Animated.Text style={[styles.equiv, { color: colors.textMuted }]}>
+              ≈ {convertAndFormat(transaction.amount_rub!)}
+            </Animated.Text>
+          )}
           <Animated.Text style={[styles.date, { color: colors.textMuted }]}>{displayDate}</Animated.Text>
         </View>
       </Pressable>
@@ -104,9 +112,14 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.bodySemiBold,
     fontSize: FontSize.md,
   },
+  equiv: {
+    fontFamily: FontFamily.body,
+    fontSize: FontSize.xs,
+    marginTop: 1,
+  },
   date: {
     fontFamily: FontFamily.body,
     fontSize: FontSize.xs,
-    marginTop: 2,
+    marginTop: 1,
   },
 });

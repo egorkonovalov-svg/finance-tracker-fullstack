@@ -11,8 +11,9 @@ class TransactionType(str, Enum):
 
 class TransactionCreate(BaseModel):
     type: TransactionType
-    amount: float = Field(gt=0)
+    amount: float = Field(gt=0)       # original amount in `currency`
     currency: str = Field(min_length=3, max_length=3)
+    amount_rub: float | None = Field(default=None, gt=0)  # RUB equivalent at time of entry
     category: str
     note: str | None = None
     date: datetime
@@ -23,6 +24,7 @@ class TransactionUpdate(BaseModel):
     type: TransactionType | None = None
     amount: float | None = Field(default=None, gt=0)
     currency: str | None = Field(default=None, min_length=3, max_length=3)
+    amount_rub: float | None = Field(default=None, gt=0)
     category: str | None = None
     note: str | None = None
     date: datetime | None = None
@@ -34,6 +36,7 @@ class TransactionResponse(BaseModel):
     type: str
     amount: float
     currency: str
+    amount_rub: float | None = None
     category: str
     note: str | None = None
     date: datetime
