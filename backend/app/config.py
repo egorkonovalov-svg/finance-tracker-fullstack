@@ -9,7 +9,9 @@ _INSECURE_JWT_SECRET = "change-me-to-a-random-secret-in-production"
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file="../.env", env_file_encoding="utf-8", extra="ignore"
+    )
 
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/fintrack"
     JWT_SECRET: str = _INSECURE_JWT_SECRET
