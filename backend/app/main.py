@@ -20,10 +20,11 @@ SHOW_DOCS_ENVIRONMENT = ("local",)
 async def lifespan(app: FastAPI):
     import app.models  # noqa: F401
 
-    async with engine.begin() as conn:
-        if settings.IS_DROP_TABLES:
-            await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+    if settings.ENVIRONMENT == "local":
+        async with engine.begin() as conn:
+            if settings.IS_DROP_TABLES:
+                await conn.run_sync(Base.metadata.drop_all)
+            await conn.run_sync(Base.metadata.create_all)
     yield
 
 
