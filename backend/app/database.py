@@ -7,7 +7,7 @@ from app.config import settings
 connect_args: dict = {}
 engine_kwargs: dict = {"echo": False}
 
-if "supabase" in settings.DATABASE_URL:
+if "supabase" in settings.DATABASE_URL or "neon.tech" in settings.DATABASE_URL:
     connect_args["prepared_statement_cache_size"] = 0
     connect_args["ssl"] = "require"
     engine_kwargs["poolclass"] = NullPool
