@@ -2,6 +2,11 @@
   "buildCommand": "cd frontend && npm ci && npx expo export --platform web",
   "outputDirectory": "frontend/dist",
   "framework": null,
+  "functions": {
+    "api/index.py": {
+      "excludeFiles": "{frontend/**,*.md,docker-compose.yml,.git/**}"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/v1/(.*)",
