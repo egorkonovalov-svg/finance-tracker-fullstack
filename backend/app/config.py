@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = ""
     VERIFICATION_CODE_EXPIRE_MINUTES: int = 10
+    IS_DROP_TABLES: bool = False
 
 
 settings = Settings()
