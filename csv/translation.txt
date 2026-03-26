@@ -1,0 +1,67 @@
+
+
+
+
+
+
+
+
+
+
+
+'''
+[{
+  "name1": "Freelance"
+}, {
+  "name2": "Health"
+}, {
+  "name3": "Salary"
+}, {
+  "name4": "Entertainment"
+}, {
+  "name5": "Shopping"
+}, {
+  "name6": "Gifts"
+}, {
+  "name7": "Food & Drinks"
+}, {
+  "name8": "Education"
+}, {
+  "name9": "Transport"
+}, {
+  "name10": "Bills & Utilities"
+}, {
+  "name11": "Other"
+}, {
+  "name12": "Investments"
+}]
+'''
+ 
+'''
+[{
+  "name1": "Фриланс"
+}, {
+  "name2": "Здоровье"
+}, {
+  "name3": "Зарплата"
+}, {
+  "name4": "Развлечения"
+}, {
+  "name5": "Покупки"
+}, {
+  "name6": "Подарки"
+}, {
+  "name7": "Еда и Напитки"
+}, {
+  "name8": "Образование"
+}, {
+  "name9": "Транспорт"
+}, {
+  "name10": "Счета и ЖКХ"
+}, {
+  "name11": "Другое"
+}, {
+  "name12": "Инвестиции"
+}]
+'''
+ 
