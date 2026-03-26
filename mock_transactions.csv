@@ -1,0 +1,66 @@
+id,user_id,type,amount,currency,category,note,date,recurring
+a3f1e2d0-0101-4a1b-8c2d-e5f6a7b8c901,a7158a7c-8ce2-473b-afbc-761db6fd9682,income,150000.00,RUB,Salary,Январская зарплата,2026-01-10T09:00:00+03:00,true
+a3f1e2d0-0102-4a1b-8c2d-e5f6a7b8c902,a7158a7c-8ce2-473b-afbc-761db6fd9682,income,45000.00,RUB,Freelance,Проект по дизайну,2026-01-20T14:30:00+03:00,false
+a3f1e2d0-0103-4a1b-8c2d-e5f6a7b8c903,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2500.00,RUB,Food & Drinks,Продукты в Перекрёстке,2026-01-02T19:15:00+03:00,false
+a3f1e2d0-0104-4a1b-8c2d-e5f6a7b8c904,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,1800.00,RUB,Food & Drinks,Обед в кафе,2026-01-05T13:00:00+03:00,false
+a3f1e2d0-0105-4a1b-8c2d-e5f6a7b8c905,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,3200.00,RUB,Food & Drinks,Продукты ВкусВилл,2026-01-09T18:45:00+03:00,false
+a3f1e2d0-0106-4a1b-8c2d-e5f6a7b8c906,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,4500.00,RUB,Food & Drinks,Ужин с друзьями,2026-01-14T20:00:00+03:00,false
+a3f1e2d0-0107-4a1b-8c2d-e5f6a7b8c907,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,1900.00,RUB,Food & Drinks,Продукты,2026-01-19T17:30:00+03:00,false
+a3f1e2d0-0108-4a1b-8c2d-e5f6a7b8c908,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2800.00,RUB,Food & Drinks,Продукты в Ленте,2026-01-24T19:00:00+03:00,false
+a3f1e2d0-0109-4a1b-8c2d-e5f6a7b8c909,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2100.00,RUB,Food & Drinks,Пицца и напитки,2026-01-28T21:00:00+03:00,false
+a3f1e2d0-0110-4a1b-8c2d-e5f6a7b8c910,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,3500.00,RUB,Transport,Проездной на январь,2026-01-03T08:00:00+03:00,true
+a3f1e2d0-0111-4a1b-8c2d-e5f6a7b8c911,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,450.00,RUB,Transport,Яндекс.Такси,2026-01-12T23:30:00+03:00,false
+a3f1e2d0-0112-4a1b-8c2d-e5f6a7b8c912,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,780.00,RUB,Transport,Такси до аэропорта,2026-01-22T05:00:00+03:00,false
+a3f1e2d0-0113-4a1b-8c2d-e5f6a7b8c913,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,6500.00,RUB,Bills & Utilities,Аренда квартиры (часть),2026-01-08T10:00:00+03:00,true
+a3f1e2d0-0114-4a1b-8c2d-e5f6a7b8c914,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2800.00,RUB,Bills & Utilities,Коммунальные услуги,2026-01-08T10:05:00+03:00,true
+a3f1e2d0-0115-4a1b-8c2d-e5f6a7b8c915,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,1100.00,RUB,Bills & Utilities,Интернет и телефон,2026-01-08T10:10:00+03:00,true
+a3f1e2d0-0116-4a1b-8c2d-e5f6a7b8c916,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,8900.00,RUB,Shopping,Зимняя куртка,2026-01-11T15:00:00+03:00,false
+a3f1e2d0-0117-4a1b-8c2d-e5f6a7b8c917,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,4200.00,RUB,Shopping,Косметика и уход,2026-01-25T16:30:00+03:00,false
+a3f1e2d0-0118-4a1b-8c2d-e5f6a7b8c918,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,1200.00,RUB,Entertainment,Кино,2026-01-17T19:00:00+03:00,false
+a3f1e2d0-0119-4a1b-8c2d-e5f6a7b8c919,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2500.00,RUB,Entertainment,Боулинг с компанией,2026-01-23T20:00:00+03:00,false
+a3f1e2d0-0120-4a1b-8c2d-e5f6a7b8c920,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,3500.00,RUB,Health,Приём у врача,2026-01-16T11:00:00+03:00,false
+a3f1e2d0-0121-4a1b-8c2d-e5f6a7b8c921,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,8000.00,RUB,Education,Онлайн-курс английского,2026-01-07T09:00:00+03:00,true
+a3f1e2d0-0201-4a1b-8c2d-e5f6a7b8c922,a7158a7c-8ce2-473b-afbc-761db6fd9682,income,150000.00,RUB,Salary,Февральская зарплата,2026-02-10T09:00:00+03:00,true
+a3f1e2d0-0202-4a1b-8c2d-e5f6a7b8c923,a7158a7c-8ce2-473b-afbc-761db6fd9682,income,30000.00,RUB,Freelance,Разработка лендинга,2026-02-14T18:00:00+03:00,false
+a3f1e2d0-0203-4a1b-8c2d-e5f6a7b8c924,a7158a7c-8ce2-473b-afbc-761db6fd9682,income,15000.00,RUB,Investments,Дивиденды,2026-02-01T10:00:00+03:00,false
+a3f1e2d0-0204-4a1b-8c2d-e5f6a7b8c925,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2700.00,RUB,Food & Drinks,Продукты в Перекрёстке,2026-02-03T18:30:00+03:00,false
+a3f1e2d0-0205-4a1b-8c2d-e5f6a7b8c926,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,1600.00,RUB,Food & Drinks,Бизнес-ланч,2026-02-07T13:30:00+03:00,false
+a3f1e2d0-0206-4a1b-8c2d-e5f6a7b8c927,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,5200.00,RUB,Food & Drinks,Ужин на День влюблённых,2026-02-14T20:30:00+03:00,false
+a3f1e2d0-0207-4a1b-8c2d-e5f6a7b8c928,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2100.00,RUB,Food & Drinks,Продукты ВкусВилл,2026-02-18T19:00:00+03:00,false
+a3f1e2d0-0208-4a1b-8c2d-e5f6a7b8c929,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,3400.00,RUB,Food & Drinks,Продукты в Ленте,2026-02-24T17:45:00+03:00,false
+a3f1e2d0-0209-4a1b-8c2d-e5f6a7b8c930,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,3500.00,RUB,Transport,Проездной на февраль,2026-02-03T08:00:00+03:00,true
+a3f1e2d0-0210-4a1b-8c2d-e5f6a7b8c931,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,620.00,RUB,Transport,Яндекс.Такси,2026-02-09T00:15:00+03:00,false
+a3f1e2d0-0211-4a1b-8c2d-e5f6a7b8c932,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,6500.00,RUB,Bills & Utilities,Аренда квартиры (часть),2026-02-08T10:00:00+03:00,true
+a3f1e2d0-0212-4a1b-8c2d-e5f6a7b8c933,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2800.00,RUB,Bills & Utilities,Коммунальные услуги,2026-02-08T10:05:00+03:00,true
+a3f1e2d0-0213-4a1b-8c2d-e5f6a7b8c934,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,1100.00,RUB,Bills & Utilities,Интернет и телефон,2026-02-08T10:10:00+03:00,true
+a3f1e2d0-0214-4a1b-8c2d-e5f6a7b8c935,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,12500.00,RUB,Shopping,Подарок на День влюблённых,2026-02-13T17:00:00+03:00,false
+a3f1e2d0-0215-4a1b-8c2d-e5f6a7b8c936,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,3800.00,RUB,Shopping,Одежда,2026-02-20T14:00:00+03:00,false
+a3f1e2d0-0216-4a1b-8c2d-e5f6a7b8c937,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,1800.00,RUB,Entertainment,Концерт,2026-02-07T19:30:00+03:00,false
+a3f1e2d0-0217-4a1b-8c2d-e5f6a7b8c938,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,4500.00,RUB,Entertainment,Горнолыжный курорт,2026-02-22T09:00:00+03:00,false
+a3f1e2d0-0218-4a1b-8c2d-e5f6a7b8c939,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,1200.00,RUB,Health,Анализы,2026-02-11T09:30:00+03:00,false
+a3f1e2d0-0219-4a1b-8c2d-e5f6a7b8c940,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,8000.00,RUB,Education,Онлайн-курс английского,2026-02-07T09:00:00+03:00,true
+a3f1e2d0-0220-4a1b-8c2d-e5f6a7b8c941,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,5500.00,RUB,Gifts,Подарок другу на день рождения,2026-02-14T12:00:00+03:00,false
+a3f1e2d0-0301-4a1b-8c2d-e5f6a7b8c942,a7158a7c-8ce2-473b-afbc-761db6fd9682,income,150000.00,RUB,Salary,Мартовская зарплата,2026-03-10T09:00:00+03:00,true
+a3f1e2d0-0302-4a1b-8c2d-e5f6a7b8c943,a7158a7c-8ce2-473b-afbc-761db6fd9682,income,55000.00,RUB,Freelance,Разработка мобильного приложения,2026-03-05T17:00:00+03:00,false
+a3f1e2d0-0303-4a1b-8c2d-e5f6a7b8c944,a7158a7c-8ce2-473b-afbc-761db6fd9682,income,20000.00,RUB,Freelance,Консультации по UX,2026-03-22T16:00:00+03:00,false
+a3f1e2d0-0304-4a1b-8c2d-e5f6a7b8c945,a7158a7c-8ce2-473b-afbc-761db6fd9682,income,22000.00,RUB,Investments,Продажа акций,2026-03-01T12:00:00+03:00,false
+a3f1e2d0-0305-4a1b-8c2d-e5f6a7b8c946,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,3100.00,RUB,Food & Drinks,Продукты в Перекрёстке,2026-03-02T19:00:00+03:00,false
+a3f1e2d0-0306-4a1b-8c2d-e5f6a7b8c947,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2200.00,RUB,Food & Drinks,Бизнес-ланч,2026-03-06T13:00:00+03:00,false
+a3f1e2d0-0307-4a1b-8c2d-e5f6a7b8c948,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,1800.00,RUB,Food & Drinks,Кофе и перекус,2026-03-11T10:30:00+03:00,false
+a3f1e2d0-0308-4a1b-8c2d-e5f6a7b8c949,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,4800.00,RUB,Food & Drinks,Ужин в ресторане,2026-03-17T20:00:00+03:00,false
+a3f1e2d0-0309-4a1b-8c2d-e5f6a7b8c950,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2600.00,RUB,Food & Drinks,Продукты ВкусВилл,2026-03-21T18:00:00+03:00,false
+a3f1e2d0-0310-4a1b-8c2d-e5f6a7b8c951,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,3300.00,RUB,Food & Drinks,Продукты в Ленте,2026-03-25T17:30:00+03:00,false
+a3f1e2d0-0311-4a1b-8c2d-e5f6a7b8c952,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,3500.00,RUB,Transport,Проездной на март,2026-03-03T08:00:00+03:00,true
+a3f1e2d0-0312-4a1b-8c2d-e5f6a7b8c953,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,890.00,RUB,Transport,Яндекс.Такси,2026-03-14T22:45:00+03:00,false
+a3f1e2d0-0313-4a1b-8c2d-e5f6a7b8c954,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,6500.00,RUB,Bills & Utilities,Аренда квартиры (часть),2026-03-08T10:00:00+03:00,true
+a3f1e2d0-0314-4a1b-8c2d-e5f6a7b8c955,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2800.00,RUB,Bills & Utilities,Коммунальные услуги,2026-03-08T10:05:00+03:00,true
+a3f1e2d0-0315-4a1b-8c2d-e5f6a7b8c956,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,1100.00,RUB,Bills & Utilities,Интернет и телефон,2026-03-08T10:10:00+03:00,true
+a3f1e2d0-0316-4a1b-8c2d-e5f6a7b8c957,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,7200.00,RUB,Shopping,Кроссовки,2026-03-08T14:00:00+03:00,false
+a3f1e2d0-0317-4a1b-8c2d-e5f6a7b8c958,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,15800.00,RUB,Shopping,Весенняя одежда,2026-03-19T15:00:00+03:00,false
+a3f1e2d0-0318-4a1b-8c2d-e5f6a7b8c959,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,3500.00,RUB,Entertainment,Театр,2026-03-14T18:30:00+03:00,false
+a3f1e2d0-0319-4a1b-8c2d-e5f6a7b8c960,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2200.00,RUB,Entertainment,Настольные игры в баре,2026-03-24T20:00:00+03:00,false
+a3f1e2d0-0320-4a1b-8c2d-e5f6a7b8c961,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,5800.00,RUB,Health,Стоматолог,2026-03-10T10:00:00+03:00,false
+a3f1e2d0-0321-4a1b-8c2d-e5f6a7b8c962,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,2100.00,RUB,Health,Лекарства в аптеке,2026-03-20T12:00:00+03:00,false
+a3f1e2d0-0322-4a1b-8c2d-e5f6a7b8c963,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,8000.00,RUB,Education,Онлайн-курс английского,2026-03-07T09:00:00+03:00,true
+a3f1e2d0-0323-4a1b-8c2d-e5f6a7b8c964,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,3200.00,RUB,Gifts,Подарок на 8 марта,2026-03-08T11:00:00+03:00,false
+a3f1e2d0-0324-4a1b-8c2d-e5f6a7b8c965,a7158a7c-8ce2-473b-afbc-761db6fd9682,expense,4500.00,RUB,Other,Ремонт велосипеда,2026-03-16T14:00:00+03:00,false
