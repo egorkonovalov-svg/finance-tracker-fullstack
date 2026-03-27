@@ -49,6 +49,9 @@ Thumbs.db
 .cursorignore
 .cursorindexingignore
 
+# Vercel
+.vercel/
+
 # TypeScript
 *.tsbuildinfo
 
