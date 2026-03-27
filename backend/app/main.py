@@ -1,4 +1,5 @@
 import logging
+import uvicorn
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -9,7 +10,6 @@ from slowapi.errors import RateLimitExceeded
 from app.config import settings
 from app.database import engine, Base
 from app.routers import auth, budgets, categories, goals, transactions
-import os
 
 logger = logging.getLogger(__name__)
 
