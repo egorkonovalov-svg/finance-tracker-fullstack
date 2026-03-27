@@ -32,7 +32,7 @@ function AuthGate({ hasOnboarded }: { hasOnboarded: boolean }) {
 
     const inAuthGroup = segments[0] === 'auth' || segments[0] === 'welcome' || segments[0] === 'verify-code';
 
-    if (!hasOnboarded) {
+    if (!hasOnboarded && !inAuthGroup) {
       router.replace('/welcome');
     } else if (!isAuthenticated && !inAuthGroup) {
       router.replace('/auth');

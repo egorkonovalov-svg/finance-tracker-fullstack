@@ -1,0 +1,32 @@
+{
+  "buildCommand": "cd frontend && npm ci && npx expo export --platform web",
+  "outputDirectory": "frontend/dist",
+  "framework": null,
+  "functions": {
+    "api/index.py": {
+      "excludeFiles": "{frontend/**,*.md,docker-compose.yml,.git/**}"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/v1/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/docs",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/((?!api|_next|assets|favicon).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

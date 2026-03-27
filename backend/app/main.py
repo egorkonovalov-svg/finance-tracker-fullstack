@@ -1,4 +1,5 @@
 import logging
+import uvicorn
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -9,7 +10,6 @@ from slowapi.errors import RateLimitExceeded
 from app.config import settings
 from app.database import engine, Base
 from app.routers import auth, budgets, categories, goals, transactions
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +20,11 @@ SHOW_DOCS_ENVIRONMENT = ("local",)
 async def lifespan(app: FastAPI):
     import app.models  # noqa: F401
 
-    async with engine.begin() as conn:
-        if settings.IS_DROP_TABLES:
-            await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+    if settings.ENVIRONMENT == "local":
+        async with engine.begin() as conn:
+            if settings.IS_DROP_TABLES:
+                await conn.run_sync(Base.metadata.drop_all)
+            await conn.run_sync(Base.metadata.create_all)
     yield
 
 
@@ -58,6 +59,8 @@ if settings.ENVIRONMENT == "local":
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
