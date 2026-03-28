@@ -26,16 +26,12 @@ async def get_current_user(
 ) -> User:
     token = credentials.credentials
 
-    if is_token_blocklisted(token):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked"
-        )
-
     try:
         payload = jwt.decode(
             token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
         )
         user_id: str | None = payload.get("sub")
+        jti: str | None = payload.get("jti")
         if user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
@@ -43,6 +39,11 @@ async def get_current_user(
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
+
+    if jti and await is_token_blocklisted(db, jti):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked"
         )
 
     result = await db.execute(select(User).where(User.id == UUID(user_id)))

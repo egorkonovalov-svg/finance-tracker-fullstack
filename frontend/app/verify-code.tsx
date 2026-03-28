@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
@@ -38,12 +38,11 @@ export default function VerifyCodeScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const { verifyCode, resendCode } = useAuth();
+  const { verifyCode, resendCode, pendingVerification } = useAuth();
   const router = useRouter();
-  const params = useLocalSearchParams<{ session_id: string; email: string }>();
 
-  const [sessionId, setSessionId] = useState(params.session_id ?? '');
-  const email = params.email ?? '';
+  const [sessionId, setSessionId] = useState(pendingVerification?.session_id ?? '');
+  const email = pendingVerification?.email ?? '';
 
   const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
   const [error, setError] = useState<string | null>(null);

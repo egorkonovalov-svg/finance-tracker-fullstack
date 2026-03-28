@@ -1,13 +1,15 @@
 import logging
+from datetime import datetime, timezone
 from uuid import UUID
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from jose import JWTError, jwt
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.dependencies import get_current_user, get_db
 from app.models.category import Category
 from app.models.user import User
@@ -30,6 +32,7 @@ from app.services.auth import (
     hash_password,
     validate_verification_code,
     verify_apple_id_token,
+    verify_google_id_token,
     verify_password,
 )
 from app.services.email import send_verification_email
@@ -66,7 +69,9 @@ def _build_auth_response(user: User, token: str) -> AuthResponse:
     status_code=status.HTTP_201_CREATED,
 )
 @limiter.limit("5/minute")
-async def signup(request: Request, body: SignupRequest, db: AsyncSession = Depends(get_db)):
+async def signup(
+    request: Request, body: SignupRequest, db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(select(User).where(User.email == body.email))
     existing = result.scalar_one_or_none()
     if existing and existing.is_verified:
@@ -75,7 +80,6 @@ async def signup(request: Request, body: SignupRequest, db: AsyncSession = Depen
         )
 
     if existing and not existing.is_verified:
-        # Re-use the unverified user row, update password/name in case they changed
         existing.password_hash = hash_password(body.password)
         existing.name = body.name
         user = existing
@@ -101,7 +105,9 @@ async def signup(request: Request, body: SignupRequest, db: AsyncSession = Depen
 
 @router.post("/login", response_model=VerificationPendingResponse)
 @limiter.limit("5/minute")
-async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login(
+    request: Request, body: LoginRequest, db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(select(User).where(User.email == body.email))
     user = result.scalar_one_or_none()
 
@@ -131,8 +137,10 @@ async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends
 
 
 @router.post("/verify-code", response_model=AuthResponse)
-@limiter.limit("10/minute")
-async def verify_code(request: Request, body: VerifyCodeRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("3/minute")
+async def verify_code(
+    request: Request, body: VerifyCodeRequest, db: AsyncSession = Depends(get_db)
+):
     record = await validate_verification_code(db, body.session_id, body.code)
 
     result = await db.execute(select(User).where(User.id == record.user_id))
@@ -154,11 +162,11 @@ async def verify_code(request: Request, body: VerifyCodeRequest, db: AsyncSessio
 
 @router.post("/resend-code", response_model=VerificationPendingResponse)
 @limiter.limit("3/minute")
-async def resend_code(request: Request, body: ResendCodeRequest, db: AsyncSession = Depends(get_db)):
+async def resend_code(
+    request: Request, body: ResendCodeRequest, db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(
-        select(VerificationCode).where(
-            VerificationCode.id == UUID(body.session_id)
-        )
+        select(VerificationCode).where(VerificationCode.id == UUID(body.session_id))
     )
     old_record = result.scalar_one_or_none()
     if not old_record or old_record.used:
@@ -167,10 +175,8 @@ async def resend_code(request: Request, body: ResendCodeRequest, db: AsyncSessio
             detail="Invalid verification session",
         )
 
-    # Count resends: how many codes exist for this user+purpose created after the original
     resend_count_result = await db.execute(
-        select(VerificationCode)
-        .where(
+        select(VerificationCode).where(
             VerificationCode.user_id == old_record.user_id,
             VerificationCode.purpose == old_record.purpose,
             VerificationCode.created_at >= old_record.created_at,
@@ -186,9 +192,7 @@ async def resend_code(request: Request, body: ResendCodeRequest, db: AsyncSessio
     old_record.used = True
     await db.flush()
 
-    user_result = await db.execute(
-        select(User).where(User.id == old_record.user_id)
-    )
+    user_result = await db.execute(select(User).where(User.id == old_record.user_id))
     user = user_result.scalar_one()
 
     session_id, code = await create_verification(db, user.id, old_record.purpose)
@@ -202,23 +206,24 @@ async def resend_code(request: Request, body: ResendCodeRequest, db: AsyncSessio
 
 @router.post("/social", response_model=AuthResponse)
 @limiter.limit("5/minute")
-async def social_auth(request: Request, body: SocialAuthRequest, db: AsyncSession = Depends(get_db)):
+async def social_auth(
+    request: Request, body: SocialAuthRequest, db: AsyncSession = Depends(get_db)
+):
     email: str | None = None
     name: str | None = None
 
     if body.provider == "google":
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                f"https://oauth2.googleapis.com/tokeninfo?id_token={body.id_token}"
-            )
-        if resp.status_code != 200:
+        try:
+            payload = await verify_google_id_token(body.id_token)
+            email = payload.get("email")
+            name = payload.get("name")
+        except HTTPException:
+            raise
+        except Exception:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid Google ID token",
             )
-        info = resp.json()
-        email = info.get("email")
-        name = info.get("name")
 
     elif body.provider == "apple":
         try:
@@ -233,6 +238,12 @@ async def social_auth(request: Request, body: SocialAuthRequest, db: AsyncSessio
                 detail="Invalid Apple ID token",
             )
 
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported provider",
+        )
+
     if not email:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -243,9 +254,7 @@ async def social_auth(request: Request, body: SocialAuthRequest, db: AsyncSessio
     user = result.scalar_one_or_none()
 
     if not user:
-        user = User(
-            email=email, name=name, provider=body.provider, is_verified=True
-        )
+        user = User(email=email, name=name, provider=body.provider, is_verified=True)
         db.add(user)
         await db.flush()
         await _seed_categories(db, user.id)
@@ -271,8 +280,22 @@ async def me(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(request: Request, current_user: User = Depends(get_current_user)):
-    token = request.headers.get("Authorization", "").removeprefix("Bearer ")
+async def logout(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    token = request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
     if token:
-        add_token_to_blocklist(token)
+        try:
+            payload = jwt.decode(
+                token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+            )
+            jti = payload.get("jti")
+            exp = payload.get("exp")
+            if jti and exp:
+                expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+                await add_token_to_blocklist(db, jti, current_user.id, expires_at)
+        except JWTError:
+            pass
     return None

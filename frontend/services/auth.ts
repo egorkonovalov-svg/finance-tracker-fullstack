@@ -31,7 +31,7 @@ async function mockLogin(payload: LoginPayload): Promise<SessionResponse> {
   if (!payload.email || !payload.password) {
     throw new Error('Email and password are required');
   }
-  if (payload.password.length < 6) {
+  if (payload.password.length < 8) {
     throw new Error('Invalid credentials');
   }
   return { session_id: MOCK_SESSION_ID, message: 'Verification code sent to your email' };
@@ -42,8 +42,8 @@ async function mockSignup(payload: SignupPayload): Promise<SessionResponse> {
   if (!payload.email || !payload.password) {
     throw new Error('Email and password are required');
   }
-  if (payload.password.length < 6) {
-    throw new Error('Password must be at least 6 characters');
+  if (payload.password.length < 8) {
+    throw new Error('Password must be at least 8 characters');
   }
   return { session_id: MOCK_SESSION_ID, message: 'Verification code sent to your email' };
 }

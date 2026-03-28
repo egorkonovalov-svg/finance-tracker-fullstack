@@ -41,9 +41,19 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
 
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(transactions.router, prefix="/api/v1")
@@ -53,13 +63,13 @@ app.include_router(goals.router, prefix="/api/v1")
 
 if settings.ENVIRONMENT == "local":
     from app.routers import dev
+
     app.include_router(dev.router, prefix="/api/v1")
 
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
-
 
 
 if __name__ == "__main__":

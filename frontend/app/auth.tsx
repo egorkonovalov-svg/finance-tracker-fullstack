@@ -19,12 +19,12 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
-import { ApiError } from '@/services/api-client';
+import { ApiError, USE_MOCK } from '@/services/api-client';
 import { GlassCard } from '@/components/ui/glass-card';
 import { FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/theme';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD_LENGTH = 6;
+const MIN_PASSWORD_LENGTH = 8;
 
 function extractErrorMessage(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {
@@ -41,7 +41,7 @@ export default function AuthScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const { login, signup, socialAuth, authError, clearAuthError } = useAuth();
+  const { login, signup, socialAuth, authError, clearAuthError, setPendingVerification } = useAuth();
   const router = useRouter();
 
   React.useEffect(() => {
@@ -78,10 +78,8 @@ export default function AuthScreen() {
       const res = isLogin
         ? await login({ email: trimmedEmail, password })
         : await signup({ email: trimmedEmail, password, name: name.trim() || undefined });
-      router.push({
-        pathname: '/verify-code',
-        params: { session_id: res.session_id, email: trimmedEmail },
-      });
+      setPendingVerification({ session_id: res.session_id, email: trimmedEmail });
+      router.push('/verify-code');
     } catch (e: unknown) {
       Alert.alert(t('errors.generic'), extractErrorMessage(e, t('errors.generic')));
     } finally {
@@ -90,6 +88,10 @@ export default function AuthScreen() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!(__DEV__ && USE_MOCK)) {
+      Alert.alert(t('errors.generic'), t('errors.googleSignInFailed'));
+      return;
+    }
     setSubmitting(true);
     try {
       await socialAuth({ provider: 'google', id_token: 'google-mock-token' });
