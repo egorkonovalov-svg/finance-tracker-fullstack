@@ -25,7 +25,17 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = ""
     VERIFICATION_CODE_EXPIRE_MINUTES: int = 10
     IS_DROP_TABLES: bool = False
-    DEV_ADMIN_KEY: str = ""
 
+    MAX_CODE_RESENDS: int = 3
+    MAX_VERIFICATION_ATTEMPTS: int = 5
+    APPLE_KEYS_URL: str = "https://appleid.apple.com/auth/keys"
+    APPLE_KEYS_TTL: int = 3600
+    DEFAULT_CATEGORY_COLOR: str = "#6B7280"
+
+
+# Rate-limit constants (not env-driven)
+RATE_LIMIT_AUTH_DEFAULT = "5/minute"
+RATE_LIMIT_VERIFY = "3/minute"
+RATE_LIMIT_RESEND = "3/minute"
 
 settings = Settings()
