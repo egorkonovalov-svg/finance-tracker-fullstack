@@ -21,11 +21,20 @@ async def get_monthly_stats(
     # Totals
     totals_q = select(
         func.coalesce(
-            func.sum(case((Transaction.type == "income", Transaction.amount), else_=Decimal(0))),
+            func.sum(
+                case(
+                    (Transaction.type == "income", Transaction.amount), else_=Decimal(0)
+                )
+            ),
             Decimal(0),
         ).label("total_income"),
         func.coalesce(
-            func.sum(case((Transaction.type == "expense", Transaction.amount), else_=Decimal(0))),
+            func.sum(
+                case(
+                    (Transaction.type == "expense", Transaction.amount),
+                    else_=Decimal(0),
+                )
+            ),
             Decimal(0),
         ).label("total_expenses"),
     ).where(base_filter)
@@ -64,11 +73,21 @@ async def get_monthly_stats(
         select(
             day_col,
             func.coalesce(
-                func.sum(case((Transaction.type == "income", Transaction.amount), else_=Decimal(0))),
+                func.sum(
+                    case(
+                        (Transaction.type == "income", Transaction.amount),
+                        else_=Decimal(0),
+                    )
+                ),
                 Decimal(0),
             ).label("income"),
             func.coalesce(
-                func.sum(case((Transaction.type == "expense", Transaction.amount), else_=Decimal(0))),
+                func.sum(
+                    case(
+                        (Transaction.type == "expense", Transaction.amount),
+                        else_=Decimal(0),
+                    )
+                ),
                 Decimal(0),
             ).label("expense"),
         )
@@ -86,7 +105,10 @@ async def get_monthly_stats(
     daily_map: dict[str, dict] = {}
     for r in daily_rows:
         d = r.day if isinstance(r.day, date) else r.day.date()
-        daily_map[d.isoformat()] = {"income": float(r.income), "expense": float(r.expense)}
+        daily_map[d.isoformat()] = {
+            "income": float(r.income),
+            "expense": float(r.expense),
+        }
 
     daily = []
     current = start_day

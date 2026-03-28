@@ -28,9 +28,7 @@ async def list_goals(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(Goal).where(Goal.user_id == current_user.id)
-    )
+    result = await db.execute(select(Goal).where(Goal.user_id == current_user.id))
     goals = result.scalars().all()
     return [_to_response(g) for g in goals]
 

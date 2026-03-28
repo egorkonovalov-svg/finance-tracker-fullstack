@@ -33,9 +33,7 @@ async def list_budgets(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(Budget).where(Budget.user_id == current_user.id)
-    )
+    result = await db.execute(select(Budget).where(Budget.user_id == current_user.id))
     budgets = result.scalars().all()
     return [_to_response(b) for b in budgets]
 
@@ -55,9 +53,7 @@ async def budget_summary(
     stats = await get_monthly_stats(db, current_user.id, year, m)
     by_cat = {item["category"]: item["amount"] for item in stats["by_category"]}
 
-    result = await db.execute(
-        select(Budget).where(Budget.user_id == current_user.id)
-    )
+    result = await db.execute(select(Budget).where(Budget.user_id == current_user.id))
     budgets = result.scalars().all()
 
     items = []
