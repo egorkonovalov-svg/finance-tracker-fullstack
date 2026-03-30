@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import get_current_user, get_db
 from app.models.budget import Budget
 from app.models.user import User
+from app.utils import get_or_404
 from app.schemas.budget import (
     BudgetCreate,
     BudgetResponse,
@@ -108,17 +109,7 @@ async def update_budget(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(Budget).where(
-            Budget.id == budget_id,
-            Budget.user_id == current_user.id,
-        )
-    )
-    budget = result.scalar_one_or_none()
-    if not budget:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Budget not found"
-        )
+    budget = await get_or_404(db, Budget, budget_id, current_user.id, detail="Budget not found")
     update_data = body.model_dump(exclude_unset=True)
     new_category = update_data.get("category")
     if new_category and new_category != budget.category:
@@ -146,17 +137,7 @@ async def delete_budget(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(Budget).where(
-            Budget.id == budget_id,
-            Budget.user_id == current_user.id,
-        )
-    )
-    budget = result.scalar_one_or_none()
-    if not budget:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Budget not found"
-        )
+    budget = await get_or_404(db, Budget, budget_id, current_user.id, detail="Budget not found")
     await db.delete(budget)
     await db.commit()
     return None

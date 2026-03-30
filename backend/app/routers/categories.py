@@ -1,12 +1,15 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, status
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_current_user, get_db
+from app.exceptions import ConflictError
 from app.models.category import Category
+from app.models.transaction import Transaction
 from app.models.user import User
+from app.utils import get_or_404
 from app.schemas.category import CategoryCreate, CategoryResponse, CategoryUpdate
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
@@ -21,12 +24,7 @@ async def list_categories(
         select(Category).where(Category.user_id == current_user.id)
     )
     categories = result.scalars().all()
-    return [
-        CategoryResponse(
-            id=str(c.id), name=c.name, icon=c.icon, color=c.color, type=c.type
-        )
-        for c in categories
-    ]
+    return [CategoryResponse.model_validate(c) for c in categories]
 
 
 @router.post("", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
@@ -39,13 +37,7 @@ async def create_category(
     db.add(category)
     await db.commit()
     await db.refresh(category)
-    return CategoryResponse(
-        id=str(category.id),
-        name=category.name,
-        icon=category.icon,
-        color=category.color,
-        type=category.type,
-    )
+    return CategoryResponse.model_validate(category)
 
 
 @router.put("/{category_id}", response_model=CategoryResponse)
@@ -55,16 +47,9 @@ async def update_category(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(Category).where(
-            Category.id == category_id, Category.user_id == current_user.id
-        )
+    category = await get_or_404(
+        db, Category, category_id, current_user.id, detail="Category not found"
     )
-    category = result.scalar_one_or_none()
-    if not category:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
-        )
 
     update_data = body.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -72,13 +57,7 @@ async def update_category(
 
     await db.commit()
     await db.refresh(category)
-    return CategoryResponse(
-        id=str(category.id),
-        name=category.name,
-        icon=category.icon,
-        color=category.color,
-        type=category.type,
-    )
+    return CategoryResponse.model_validate(category)
 
 
 @router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -87,15 +66,20 @@ async def delete_category(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(Category).where(
-            Category.id == category_id, Category.user_id == current_user.id
-        )
+    category = await get_or_404(
+        db, Category, category_id, current_user.id, detail="Category not found"
     )
-    category = result.scalar_one_or_none()
-    if not category:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
+
+    count = (
+        await db.execute(
+            select(func.count(Transaction.id)).where(
+                Transaction.category_id == category_id
+            )
+        )
+    ).scalar() or 0
+    if count > 0:
+        raise ConflictError(
+            f"Cannot delete category: {count} transaction(s) still reference it"
         )
 
     await db.delete(category)
