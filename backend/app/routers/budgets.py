@@ -21,14 +21,6 @@ from app.services.stats import get_monthly_stats
 router = APIRouter(prefix="/budgets", tags=["Budgets"])
 
 
-def _to_response(b: Budget) -> BudgetResponse:
-    return BudgetResponse(
-        id=str(b.id),
-        category=b.category,
-        amount_limit=float(b.amount_limit),
-    )
-
-
 @router.get("", response_model=list[BudgetResponse])
 async def list_budgets(
     current_user: User = Depends(get_current_user),
@@ -36,7 +28,7 @@ async def list_budgets(
 ):
     result = await db.execute(select(Budget).where(Budget.user_id == current_user.id))
     budgets = result.scalars().all()
-    return [_to_response(b) for b in budgets]
+    return [BudgetResponse.model_validate(b) for b in budgets]
 
 
 @router.get("/summary", response_model=BudgetSummaryResponse)
@@ -99,7 +91,7 @@ async def create_budget(
     db.add(budget)
     await db.commit()
     await db.refresh(budget)
-    return _to_response(budget)
+    return BudgetResponse.model_validate(budget)
 
 
 @router.put("/{budget_id}", response_model=BudgetResponse)
@@ -109,7 +101,9 @@ async def update_budget(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    budget = await get_or_404(db, Budget, budget_id, current_user.id, detail="Budget not found")
+    budget = await get_or_404(
+        db, Budget, budget_id, current_user.id, detail="Budget not found"
+    )
     update_data = body.model_dump(exclude_unset=True)
     new_category = update_data.get("category")
     if new_category and new_category != budget.category:
@@ -128,7 +122,7 @@ async def update_budget(
         setattr(budget, field, value)
     await db.commit()
     await db.refresh(budget)
-    return _to_response(budget)
+    return BudgetResponse.model_validate(budget)
 
 
 @router.delete("/{budget_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -137,7 +131,9 @@ async def delete_budget(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    budget = await get_or_404(db, Budget, budget_id, current_user.id, detail="Budget not found")
+    budget = await get_or_404(
+        db, Budget, budget_id, current_user.id, detail="Budget not found"
+    )
     await db.delete(budget)
     await db.commit()
     return None

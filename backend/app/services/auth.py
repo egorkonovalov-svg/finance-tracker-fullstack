@@ -6,17 +6,19 @@ from uuid import UUID
 
 import bcrypt
 import httpx
-from fastapi import HTTPException, status
 from jose import jwt, jwk, JWTError
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.constants import DEFAULT_CATEGORIES
+from app.database import async_session
+from app.exceptions import AuthenticationError, ConflictError, RateLimitError
+from app.models.category import Category
+from app.models.user import User
 from app.models.verification_code import VerificationCode
 
 logger = logging.getLogger(__name__)
-
-MAX_VERIFICATION_ATTEMPTS = 5
 
 
 # ─── Token blocklist (DB-backed) ─────────────────────────────────────────────
@@ -37,6 +39,18 @@ async def is_token_blocklisted(db: AsyncSession, jti: str) -> bool:
 
     result = await db.execute(select(RevokedToken).where(RevokedToken.jti == jti))
     return result.scalar_one_or_none() is not None
+
+
+async def cleanup_expired_revoked_tokens() -> None:
+    from app.models.revoked_token import RevokedToken
+
+    async with async_session() as db:
+        await db.execute(
+            delete(RevokedToken).where(
+                RevokedToken.expires_at < datetime.now(timezone.utc)
+            )
+        )
+        await db.commit()
 
 
 # ─── Password helpers ─────────────────────────────────────────────────────────
@@ -64,67 +78,43 @@ def create_access_token(user_id: str) -> str:
 
 # ─── Apple Sign-In verification ───────────────────────────────────────────────
 
-APPLE_KEYS_URL = "https://appleid.apple.com/auth/keys"
 _apple_keys_cache: dict | None = None
 _apple_keys_fetched_at: float = 0
-_APPLE_KEYS_TTL = 3600
 
 
 async def _fetch_apple_public_keys() -> dict:
     global _apple_keys_cache, _apple_keys_fetched_at
 
     now = time.monotonic()
-    if _apple_keys_cache and (now - _apple_keys_fetched_at) < _APPLE_KEYS_TTL:
+    if _apple_keys_cache and (now - _apple_keys_fetched_at) < settings.APPLE_KEYS_TTL:
         return _apple_keys_cache
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(APPLE_KEYS_URL, timeout=10)
-        resp.raise_for_status()
+        resp = await client.get(settings.APPLE_KEYS_URL, timeout=10)
+        try:
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise AuthenticationError(
+                f"Failed to fetch Apple public keys: {exc.response.status_code}"
+            ) from exc
 
     _apple_keys_cache = resp.json()
     _apple_keys_fetched_at = now
     return _apple_keys_cache
 
 
-async def verify_apple_id_token(id_token: str) -> dict:
-    if not settings.APPLE_CLIENT_ID:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Apple auth not configured",
-        )
-
-    try:
-        unverified_header = jwt.get_unverified_header(id_token)
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Apple ID token",
-        )
-
-    kid = unverified_header.get("kid")
-    if not kid:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Apple ID token missing key ID",
-        )
-
-    keys_data = await _fetch_apple_public_keys()
-    matching_key = None
+def _find_matching_key(keys_data: dict, kid: str) -> dict:
+    """Find the Apple public key matching the given key ID."""
     for key_data in keys_data.get("keys", []):
         if key_data.get("kid") == kid:
-            matching_key = key_data
-            break
+            return key_data
+    raise AuthenticationError("Apple ID token signed with unknown key")
 
-    if not matching_key:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Apple ID token signed with unknown key",
-        )
 
-    public_key = jwk.construct(matching_key)
-
+def _validate_apple_jwt(id_token: str, public_key) -> dict:
+    """Decode and validate an Apple JWT against the given public key."""
     try:
-        payload = jwt.decode(
+        return jwt.decode(
             id_token,
             public_key,
             algorithms=["RS256"],
@@ -134,91 +124,27 @@ async def verify_apple_id_token(id_token: str) -> dict:
         )
     except JWTError as e:
         logger.warning("Apple ID token verification failed: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Apple ID token",
-        )
-
-    return payload
+        raise AuthenticationError("Invalid Apple ID token") from e
 
 
-# ─── Google Sign-In verification ──────────────────────────────────────────────
-
-GOOGLE_KEYS_URL = "https://www.googleapis.com/oauth2/v3/certs"
-_google_keys_cache: dict | None = None
-_google_keys_fetched_at: float = 0
-_GOOGLE_KEYS_TTL = 3600
-
-
-async def _fetch_google_public_keys() -> dict:
-    global _google_keys_cache, _google_keys_fetched_at
-
-    now = time.monotonic()
-    if _google_keys_cache and (now - _google_keys_fetched_at) < _GOOGLE_KEYS_TTL:
-        return _google_keys_cache
-
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(GOOGLE_KEYS_URL, timeout=10)
-        resp.raise_for_status()
-
-    _google_keys_cache = resp.json()
-    _google_keys_fetched_at = now
-    return _google_keys_cache
-
-
-async def verify_google_id_token(id_token: str) -> dict:
-    if not settings.GOOGLE_CLIENT_ID:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Google auth not configured",
-        )
+async def verify_apple_id_token(id_token: str) -> dict:
+    """Verify an Apple ID token by checking its signature against Apple's public keys."""
+    if not settings.APPLE_CLIENT_ID:
+        raise AuthenticationError("Apple auth not configured")
 
     try:
         unverified_header = jwt.get_unverified_header(id_token)
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Google ID token",
-        )
+    except JWTError as e:
+        raise AuthenticationError("Invalid Apple ID token") from e
 
     kid = unverified_header.get("kid")
     if not kid:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Google ID token missing key ID",
-        )
+        raise AuthenticationError("Apple ID token missing key ID")
 
-    keys_data = await _fetch_google_public_keys()
-    matching_key = None
-    for key_data in keys_data.get("keys", []):
-        if key_data.get("kid") == kid:
-            matching_key = key_data
-            break
-
-    if not matching_key:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Google ID token signed with unknown key",
-        )
-
+    keys_data = await _fetch_apple_public_keys()
+    matching_key = _find_matching_key(keys_data, kid)
     public_key = jwk.construct(matching_key)
-
-    try:
-        payload = jwt.decode(
-            id_token,
-            public_key,
-            algorithms=["RS256"],
-            audience=settings.GOOGLE_CLIENT_ID,
-            issuer=["https://accounts.google.com", "accounts.google.com"],
-        )
-    except JWTError as e:
-        logger.warning("Google ID token verification failed: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Google ID token",
-        )
-
-    return payload
+    return _validate_apple_jwt(id_token, public_key)
 
 
 def generate_verification_code() -> str:
@@ -251,62 +177,144 @@ async def validate_verification_code(
     record = result.scalar_one_or_none()
 
     if not record or record.used:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired verification session",
-        )
+        raise AuthenticationError("Invalid or expired verification session")
 
     if record.expires_at < datetime.now(timezone.utc):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Verification code expired"
-        )
+        raise AuthenticationError("Verification code expired")
 
-    if record.attempts >= MAX_VERIFICATION_ATTEMPTS:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many failed attempts. Please request a new code.",
-        )
+    if record.attempts >= settings.MAX_VERIFICATION_ATTEMPTS:
+        raise RateLimitError("Too many failed attempts. Please request a new code.")
 
     if record.code != code:
         record.attempts += 1
         await db.commit()
-        remaining = MAX_VERIFICATION_ATTEMPTS - record.attempts
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid code. {remaining} attempt(s) remaining.",
-        )
+        remaining = settings.MAX_VERIFICATION_ATTEMPTS - record.attempts
+        raise AuthenticationError(f"Invalid code. {remaining} attempt(s) remaining.")
 
     record.used = True
     await db.commit()
     return record
 
 
-DEFAULT_CATEGORIES = [
-    {"name": "Зарплата", "icon": "cash", "color": "#10B981", "type": "income"},
-    {"name": "Фриланс", "icon": "laptop", "color": "#6366F1", "type": "income"},
-    {"name": "Инвестиции", "icon": "trending-up", "color": "#8B5CF6", "type": "income"},
-    {
-        "name": "Еда и напитки",
-        "icon": "restaurant",
-        "color": "#F59E0B",
-        "type": "expense",
-    },
-    {"name": "Транспорт", "icon": "car", "color": "#3B82F6", "type": "expense"},
-    {"name": "Покупки", "icon": "cart", "color": "#EC4899", "type": "expense"},
-    {
-        "name": "Развлечения",
-        "icon": "game-controller",
-        "color": "#F97316",
-        "type": "expense",
-    },
-    {"name": "Здоровье", "icon": "fitness", "color": "#EF4444", "type": "expense"},
-    {"name": "Счета и ЖКХ", "icon": "flash", "color": "#14B8A6", "type": "expense"},
-    {"name": "Образование", "icon": "school", "color": "#0EA5E9", "type": "expense"},
-    {"name": "Подарки", "icon": "gift", "color": "#D946EF", "type": "both"},
-    {
-        "name": "Другое",
-        "icon": "ellipsis-horizontal",
-        "color": "#6B7280",
-        "type": "both",
-    },
-]
+# ─── User provisioning ──────────────────────────────────────────────────────
+
+
+async def seed_categories(db: AsyncSession, user_id) -> None:
+    for cat in DEFAULT_CATEGORIES:
+        db.add(Category(user_id=user_id, **cat))
+
+
+async def get_or_create_user(
+    db: AsyncSession, email: str, password: str, name: str | None
+) -> User:
+    result = await db.execute(select(User).where(User.email == email))
+    existing = result.scalar_one_or_none()
+
+    if existing and existing.is_verified:
+        raise ConflictError("Email already registered")
+
+    if existing and not existing.is_verified:
+        existing.password_hash = hash_password(password)
+        existing.name = name
+        await db.flush()
+        return existing
+
+    user = User(
+        email=email,
+        password_hash=hash_password(password),
+        name=name,
+        is_verified=False,
+    )
+    db.add(user)
+    await db.flush()
+    return user
+
+
+async def get_or_create_social_user(
+    db: AsyncSession, email: str, name: str | None, provider: str
+) -> tuple[User, bool]:
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        user = User(email=email, name=name, provider=provider, is_verified=True)
+        db.add(user)
+        await db.flush()
+        await seed_categories(db, user.id)
+        await db.commit()
+        await db.refresh(user)
+        return user, True
+
+    if not user.is_verified:
+        user.is_verified = True
+    await db.commit()
+    return user, False
+
+
+# ─── Google Sign-In verification ──────────────────────────────────────────────
+
+GOOGLE_KEYS_URL = "https://www.googleapis.com/oauth2/v3/certs"
+_google_keys_cache: dict | None = None
+_google_keys_fetched_at: float = 0
+_GOOGLE_KEYS_TTL = 3600
+
+
+async def _fetch_google_public_keys() -> dict:
+    global _google_keys_cache, _google_keys_fetched_at
+
+    now = time.monotonic()
+    if _google_keys_cache and (now - _google_keys_fetched_at) < _GOOGLE_KEYS_TTL:
+        return _google_keys_cache
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(GOOGLE_KEYS_URL, timeout=10)
+        try:
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise AuthenticationError(
+                f"Failed to fetch Google public keys: {exc.response.status_code}"
+            ) from exc
+
+    _google_keys_cache = resp.json()
+    _google_keys_fetched_at = now
+    return _google_keys_cache
+
+
+async def verify_google_id_token(id_token: str) -> dict:
+    if not settings.GOOGLE_CLIENT_ID:
+        raise AuthenticationError("Google auth not configured")
+
+    try:
+        unverified_header = jwt.get_unverified_header(id_token)
+    except JWTError as e:
+        raise AuthenticationError("Invalid Google ID token") from e
+
+    kid = unverified_header.get("kid")
+    if not kid:
+        raise AuthenticationError("Google ID token missing key ID")
+
+    keys_data = await _fetch_google_public_keys()
+    matching_key = None
+    for key_data in keys_data.get("keys", []):
+        if key_data.get("kid") == kid:
+            matching_key = key_data
+            break
+
+    if not matching_key:
+        raise AuthenticationError("Google ID token signed with unknown key")
+
+    public_key = jwk.construct(matching_key)
+
+    try:
+        payload = jwt.decode(
+            id_token,
+            public_key,
+            algorithms=["RS256"],
+            audience=settings.GOOGLE_CLIENT_ID,
+            issuer=["https://accounts.google.com", "accounts.google.com"],
+        )
+    except JWTError as e:
+        logger.warning("Google ID token verification failed: %s", e)
+        raise AuthenticationError("Invalid Google ID token") from e
+
+    return payload

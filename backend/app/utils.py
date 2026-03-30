@@ -5,7 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def get_or_404(db: AsyncSession, model, id: UUID, user_id: UUID, detail: str = "Not found"):
+async def get_or_404(
+    db: AsyncSession, model, id: UUID, user_id: UUID, detail: str = "Not found"
+):
     result = await db.execute(
         select(model).where(model.id == id, model.user_id == user_id)
     )

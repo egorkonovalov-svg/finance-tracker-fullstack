@@ -13,17 +13,6 @@ from app.schemas.goal import GoalCreate, GoalResponse, GoalUpdate
 router = APIRouter(prefix="/goals", tags=["Goals"])
 
 
-def _to_response(g: Goal) -> GoalResponse:
-    return GoalResponse(
-        id=str(g.id),
-        name=g.name,
-        target_amount=float(g.target_amount),
-        target_date=g.target_date,
-        current_amount=float(g.current_amount),
-        created_at=g.created_at,
-    )
-
-
 @router.get("", response_model=list[GoalResponse])
 async def list_goals(
     current_user: User = Depends(get_current_user),
@@ -31,7 +20,7 @@ async def list_goals(
 ):
     result = await db.execute(select(Goal).where(Goal.user_id == current_user.id))
     goals = result.scalars().all()
-    return [_to_response(g) for g in goals]
+    return [GoalResponse.model_validate(g) for g in goals]
 
 
 @router.post("", response_model=GoalResponse, status_code=status.HTTP_201_CREATED)
@@ -50,7 +39,7 @@ async def create_goal(
     db.add(goal)
     await db.commit()
     await db.refresh(goal)
-    return _to_response(goal)
+    return GoalResponse.model_validate(goal)
 
 
 @router.put("/{goal_id}", response_model=GoalResponse)
@@ -66,7 +55,7 @@ async def update_goal(
         setattr(goal, field, value)
     await db.commit()
     await db.refresh(goal)
-    return _to_response(goal)
+    return GoalResponse.model_validate(goal)
 
 
 @router.delete("/{goal_id}", status_code=status.HTTP_204_NO_CONTENT)
