@@ -5,6 +5,7 @@ from uuid import UUID
 from sqlalchemy import and_, cast, extract, func, select, case, Date
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.models.category import Category
 from app.models.transaction import Transaction
 
@@ -48,7 +49,7 @@ async def get_monthly_stats(
         select(
             Transaction.category,
             func.sum(Transaction.amount).label("amount"),
-            func.coalesce(Category.color, "#6B7280").label("color"),
+            func.coalesce(Category.color, settings.DEFAULT_CATEGORY_COLOR).label("color"),
         )
         .outerjoin(
             Category,
