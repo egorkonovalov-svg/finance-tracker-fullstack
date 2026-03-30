@@ -10,16 +10,9 @@ from app.models.category import Category
 from app.models.transaction import Transaction
 
 
-async def get_monthly_stats(
-    db: AsyncSession, user_id: UUID, year: int, month: int
-) -> dict:
-    base_filter = and_(
-        Transaction.user_id == user_id,
-        extract("year", Transaction.date) == year,
-        extract("month", Transaction.date) == month,
-    )
-
-    # Totals
+async def _get_income_expense_totals(
+    db: AsyncSession, base_filter
+) -> tuple[float, float]:
     totals_q = select(
         func.coalesce(
             func.sum(
@@ -41,15 +34,19 @@ async def get_monthly_stats(
     ).where(base_filter)
 
     totals = (await db.execute(totals_q)).one()
-    total_income = float(totals.total_income)
-    total_expenses = float(totals.total_expenses)
+    return float(totals.total_income), float(totals.total_expenses)
 
-    # By category (expenses only, with color from categories table)
+
+async def _get_by_category_breakdown(
+    db: AsyncSession, user_id: UUID, base_filter
+) -> list[dict]:
     by_cat_q = (
         select(
             Transaction.category,
             func.sum(Transaction.amount).label("amount"),
-            func.coalesce(Category.color, settings.DEFAULT_CATEGORY_COLOR).label("color"),
+            func.coalesce(Category.color, settings.DEFAULT_CATEGORY_COLOR).label(
+                "color"
+            ),
         )
         .outerjoin(
             Category,
@@ -63,12 +60,15 @@ async def get_monthly_stats(
         .order_by(func.sum(Transaction.amount).desc())
     )
     by_cat_rows = (await db.execute(by_cat_q)).all()
-    by_category = [
+    return [
         {"category": r.category, "amount": float(r.amount), "color": r.color}
         for r in by_cat_rows
     ]
 
-    # Daily breakdown for the whole month
+
+async def _get_daily_breakdown(
+    db: AsyncSession, base_filter, year: int, month: int
+) -> list[dict]:
     day_col = cast(Transaction.date, Date).label("day")
     daily_q = (
         select(
@@ -118,6 +118,22 @@ async def get_monthly_stats(
         entry = daily_map.get(key, {"income": 0.0, "expense": 0.0})
         daily.append({"date": key, **entry})
         current = date.fromordinal(current.toordinal() + 1)
+
+    return daily
+
+
+async def get_monthly_stats(
+    db: AsyncSession, user_id: UUID, year: int, month: int
+) -> dict:
+    base_filter = and_(
+        Transaction.user_id == user_id,
+        extract("year", Transaction.date) == year,
+        extract("month", Transaction.date) == month,
+    )
+
+    total_income, total_expenses = await _get_income_expense_totals(db, base_filter)
+    by_category = await _get_by_category_breakdown(db, user_id, base_filter)
+    daily = await _get_daily_breakdown(db, base_filter, year, month)
 
     return {
         "total_income": total_income,
