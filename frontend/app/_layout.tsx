@@ -17,6 +17,7 @@ import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { AppProvider } from '@/context/AppContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -111,12 +112,14 @@ export default function RootLayout() {
   if (!ready) return null;
 
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <AppProvider>
-          <InnerLayout hasOnboarded={hasOnboarded} />
-        </AppProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ThemeProvider>
+          <AppProvider>
+            <InnerLayout hasOnboarded={hasOnboarded} />
+          </AppProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
