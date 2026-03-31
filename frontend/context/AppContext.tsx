@@ -5,6 +5,7 @@ import { categoriesService } from '@/services/categories';
 import { budgetsService } from '@/services/budgets';
 import { goalsService } from '@/services/goals';
 import { fetchExchangeRates, FALLBACK_RATES } from '@/services/exchange-rates';
+import { getErrorMessage } from '@/utils/error';
 import { useAuth } from '@/context/AuthContext';
 import type {
   Budget,
@@ -222,7 +223,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const res = await transactionsService.getAll({ ...filters, page: 1, page_size: 20 });
       dispatch({ type: 'SET_TRANSACTIONS', txs: res.items, hasMore: res.has_more, page: 1 });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
+      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
     }
   }, []);
 
@@ -234,7 +235,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const res = await transactionsService.getAll({ ...filters, page: nextPage, page_size: 20 });
       dispatch({ type: 'APPEND_TRANSACTIONS', txs: res.items, hasMore: res.has_more, page: nextPage });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
+      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
     }
   }, [state.loading, state.hasMore, state.page]);
 
@@ -262,7 +263,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const cats = await categoriesService.getAll();
       dispatch({ type: 'SET_CATEGORIES', cats });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
+      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
     }
   }, []);
 
@@ -290,7 +291,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const stats = await transactionsService.getStats(month);
       dispatch({ type: 'SET_STATS', stats });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
+      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
     }
   }, []);
 
@@ -301,7 +302,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const budgets = await budgetsService.getAll();
       dispatch({ type: 'SET_BUDGETS', budgets });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
+      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
     }
   }, []);
 
@@ -310,7 +311,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const { items } = await budgetsService.getSummary(month);
       dispatch({ type: 'SET_BUDGET_SUMMARY', items });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
+      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
     }
   }, []);
 
@@ -338,7 +339,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const goals = await goalsService.getAll();
       dispatch({ type: 'SET_GOALS', goals });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
+      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
     }
   }, []);
 

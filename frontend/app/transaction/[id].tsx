@@ -21,6 +21,7 @@ import { useTranslation, localeToBCP47 } from '@/hooks/useTranslation';
 import { GlassCard } from '@/components/ui/glass-card';
 import { CategoryChip } from '@/components/category-chip';
 import { FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
 import { useCurrency } from '@/hooks/useCurrency';
 import type { TransactionType } from '@/types';
 
@@ -38,7 +39,7 @@ export default function TransactionDetailScreen() {
   const [editing, setEditing] = useState(false);
   const [type, setType] = useState<TransactionType>(tx?.type ?? 'expense');
   const [amount, setAmount] = useState(tx ? convert(tx.amount).toFixed(2) : '');
-  const [selectedCategory, setSelectedCategory] = useState(tx?.category ?? '');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(tx?.category_id ?? '');
   const [note, setNote] = useState(tx?.note ?? '');
   const [date, setDate] = useState(tx ? new Date(tx.date) : new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -47,7 +48,7 @@ export default function TransactionDetailScreen() {
     if (tx) {
       setType(tx.type);
       setAmount(convert(tx.amount).toFixed(2));
-      setSelectedCategory(tx.category);
+      setSelectedCategoryId(tx.category_id);
       setNote(tx.note ?? '');
       setDate(new Date(tx.date));
     }
@@ -63,7 +64,7 @@ export default function TransactionDetailScreen() {
 
   const accentColor = type === 'income' ? colors.income : colors.expense;
   const filteredCategories = categories.filter((c) => c.type === type || c.type === 'both');
-  const cat = categories.find((c) => c.name === tx.category);
+  const cat = categories.find((c) => c.id === tx.category_id);
 
   const handleSave = async () => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -74,7 +75,7 @@ export default function TransactionDetailScreen() {
       await updateTransaction(tx.id, {
         type,
         amount: parseFloat(amount) / rate,
-        category: selectedCategory,
+        category_id: selectedCategoryId,
         note: note.trim() || undefined,
         date: date.toISOString(),
       });
@@ -177,7 +178,7 @@ export default function TransactionDetailScreen() {
           <Text style={[styles.fieldLabel, { color: colors.text, marginTop: Spacing.lg, marginBottom: Spacing.sm }]}>{t('detail.category')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {filteredCategories.map((cat) => (
-              <CategoryChip key={cat.id} category={cat} selected={selectedCategory === cat.name} onPress={() => setSelectedCategory(cat.name)} />
+              <CategoryChip key={cat.id} category={cat} selected={selectedCategoryId === cat.id} onPress={() => setSelectedCategoryId(cat.id)} />
             ))}
           </ScrollView>
 
@@ -228,7 +229,7 @@ export default function TransactionDetailScreen() {
   );
 }
 
-function DetailRow({ icon, label, value, iconColor, colors }: { icon: string; label: string; value: string; iconColor: string; colors: any }) {
+function DetailRow({ icon, label, value, iconColor, colors }: { icon: string; label: string; value: string; iconColor: string; colors: ThemeColors }) {
   return (
     <View style={styles.detailRow}>
       <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color={iconColor} />
