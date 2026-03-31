@@ -2,13 +2,22 @@ import logging
 import uvicorn
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.database import engine, Base
+from app.exceptions import (
+    AuthenticationError,
+    AuthorizationError,
+    ConflictError,
+    EmailDeliveryError,
+    NotFoundError,
+    RateLimitError,
+)
 from app.routers import auth, budgets, categories, goals, transactions
 
 logger = logging.getLogger(__name__)
@@ -36,6 +45,37 @@ app = FastAPI(**app_configs)
 
 app.state.limiter = auth.limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.exception_handler(AuthenticationError)
+async def authentication_error_handler(request: Request, exc: AuthenticationError):
+    return JSONResponse(status_code=401, content={"detail": exc.detail})
+
+
+@app.exception_handler(AuthorizationError)
+async def authorization_error_handler(request: Request, exc: AuthorizationError):
+    return JSONResponse(status_code=403, content={"detail": exc.detail})
+
+
+@app.exception_handler(NotFoundError)
+async def not_found_error_handler(request: Request, exc: NotFoundError):
+    return JSONResponse(status_code=404, content={"detail": exc.detail})
+
+
+@app.exception_handler(ConflictError)
+async def conflict_error_handler(request: Request, exc: ConflictError):
+    return JSONResponse(status_code=409, content={"detail": exc.detail})
+
+
+@app.exception_handler(RateLimitError)
+async def rate_limit_error_handler(request: Request, exc: RateLimitError):
+    return JSONResponse(status_code=429, content={"detail": exc.detail})
+
+
+@app.exception_handler(EmailDeliveryError)
+async def email_delivery_error_handler(request: Request, exc: EmailDeliveryError):
+    return JSONResponse(status_code=500, content={"detail": exc.detail})
+
 
 app.add_middleware(
     CORSMiddleware,

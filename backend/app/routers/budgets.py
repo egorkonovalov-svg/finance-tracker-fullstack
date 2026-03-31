@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
+from app.exceptions import ConflictError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -79,10 +80,7 @@ async def create_budget(
     )
     existing = result.scalar_one_or_none()
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Budget for category '{body.category}' already exists",
-        )
+        raise ConflictError(f"Budget for category '{body.category}' already exists")
     budget = Budget(
         user_id=current_user.id,
         category=body.category,
@@ -114,10 +112,7 @@ async def update_budget(
             )
         )
         if dup.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Budget for category '{new_category}' already exists",
-            )
+            raise ConflictError(f"Budget for category '{new_category}' already exists")
     for field, value in update_data.items():
         setattr(budget, field, value)
     await db.commit()

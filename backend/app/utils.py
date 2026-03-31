@@ -1,8 +1,9 @@
 from uuid import UUID
 
-from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.exceptions import NotFoundError
 
 
 async def get_or_404(
@@ -13,5 +14,5 @@ async def get_or_404(
     )
     obj = result.scalar_one_or_none()
     if not obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+        raise NotFoundError(detail)
     return obj

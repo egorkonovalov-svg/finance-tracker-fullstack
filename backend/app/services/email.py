@@ -4,6 +4,7 @@ import aiosmtplib
 from email.message import EmailMessage
 
 from app.config import settings
+from app.exceptions import EmailDeliveryError
 
 logger = logging.getLogger(__name__)
 
@@ -56,12 +57,7 @@ async def send_verification_email(to: str, code: str) -> None:
             start_tls=True,
             timeout=10,
         )
-    except Exception as exc:
-        # Avoid noisy tracebacks when SMTP is unreachable or misconfigured.
-        # Log a concise error instead so local development logs stay readable.
-        logger.error(
-            "Failed to send verification email to %s via SMTP (%s: %s)",
-            to,
-            type(exc).__name__,
-            str(exc),
-        )
+    except (aiosmtplib.SMTPException, OSError) as exc:
+        raise EmailDeliveryError(
+            f"Failed to send verification email to {to}: {type(exc).__name__}: {exc}"
+        ) from exc
