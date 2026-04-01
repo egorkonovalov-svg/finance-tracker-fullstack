@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import uvicorn
 from contextlib import asynccontextmanager
@@ -25,6 +26,18 @@ logger = logging.getLogger(__name__)
 SHOW_DOCS_ENVIRONMENT = ("local",)
 
 
+async def _run_periodic_cleanup():
+    from app.services.auth import cleanup_expired_blocked_tokens
+
+    while True:
+        await asyncio.sleep(3600)  # 1 hour
+        try:
+            await cleanup_expired_blocked_tokens()
+            logger.debug("Expired blocked tokens cleaned up")
+        except Exception:
+            logger.exception("Blocked token cleanup failed")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     import app.models  # noqa: F401
@@ -34,7 +47,10 @@ async def lifespan(app: FastAPI):
             if settings.IS_DROP_TABLES:
                 await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
+
+    cleanup_task = asyncio.create_task(_run_periodic_cleanup())
     yield
+    cleanup_task.cancel()
 
 
 app_configs: dict = {"title": "FinTrack API", "lifespan": lifespan}
