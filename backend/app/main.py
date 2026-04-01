@@ -33,9 +33,9 @@ async def _run_periodic_cleanup():
         await asyncio.sleep(3600)  # 1 hour
         try:
             await cleanup_expired_blocked_tokens()
-            logger.debug("Expired blocked tokens cleaned up")
+            logger.debug("Expired revoked tokens cleaned up")
         except Exception:
-            logger.exception("Blocked token cleanup failed")
+            logger.exception("Revoked token cleanup failed")
 
 
 @asynccontextmanager
