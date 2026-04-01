@@ -4,19 +4,10 @@ import { useRouter } from 'expo-router';
 
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
-import { ApiError } from '@/services/api-client';
+import { extractErrorMessage } from '@/utils/error';
 
 export const CODE_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
-
-function extractErrorMessage(e: unknown, fallback: string): string {
-  if (e instanceof ApiError) {
-    const body = e.body as Record<string, unknown> | null;
-    return (body?.detail as string) ?? (body?.message as string) ?? fallback;
-  }
-  if (e instanceof Error) return e.message;
-  return fallback;
-}
 
 export function useVerificationCode() {
   const { t } = useTranslation();

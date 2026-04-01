@@ -4,7 +4,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { USE_MOCK } from '@/services/api-client';
-import { extractErrorMessage } from '@/hooks/useEmailPasswordAuth';
+import { extractErrorMessage } from '@/utils/error';
 
 interface Options {
   setSubmitting: (v: boolean) => void;
