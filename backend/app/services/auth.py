@@ -1,6 +1,6 @@
 import logging
 import secrets
-import threading
+import time
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
@@ -18,23 +18,29 @@ logger = logging.getLogger(__name__)
 
 MAX_VERIFICATION_ATTEMPTS = 5
 
-# ─── Token blocklist ──────────────────────────────────────────────────────────
-# In-memory set of revoked JTIs / raw tokens. In production, replace with Redis.
-_blocklist: set[str] = set()
-_blocklist_lock = threading.Lock()
+
+# ─── Token blocklist (DB-backed) ─────────────────────────────────────────────
 
 
-def add_token_to_blocklist(token: str) -> None:
-    with _blocklist_lock:
-        _blocklist.add(token)
+async def add_token_to_blocklist(
+    db: AsyncSession, jti: str, user_id: UUID, expires_at: datetime
+) -> None:
+    from app.models.revoked_token import RevokedToken
+
+    record = RevokedToken(jti=jti, user_id=user_id, expires_at=expires_at)
+    db.add(record)
+    await db.commit()
 
 
-def is_token_blocklisted(token: str) -> bool:
-    with _blocklist_lock:
-        return token in _blocklist
+async def is_token_blocklisted(db: AsyncSession, jti: str) -> bool:
+    from app.models.revoked_token import RevokedToken
+
+    result = await db.execute(select(RevokedToken).where(RevokedToken.jti == jti))
+    return result.scalar_one_or_none() is not None
 
 
 # ─── Password helpers ─────────────────────────────────────────────────────────
+
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
@@ -46,11 +52,13 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 # ─── JWT ───────────────────────────────────────────────────────────────────────
 
+
 def create_access_token(user_id: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
     )
-    payload = {"sub": user_id, "exp": expire}
+    jti = secrets.token_hex(16)
+    payload = {"sub": user_id, "exp": expire, "jti": jti}
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
@@ -64,7 +72,6 @@ _APPLE_KEYS_TTL = 3600
 
 async def _fetch_apple_public_keys() -> dict:
     global _apple_keys_cache, _apple_keys_fetched_at
-    import time
 
     now = time.monotonic()
     if _apple_keys_cache and (now - _apple_keys_fetched_at) < _APPLE_KEYS_TTL:
@@ -80,7 +87,12 @@ async def _fetch_apple_public_keys() -> dict:
 
 
 async def verify_apple_id_token(id_token: str) -> dict:
-    """Verify an Apple ID token by checking its signature against Apple's public keys."""
+    if not settings.APPLE_CLIENT_ID:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Apple auth not configured",
+        )
+
     try:
         unverified_header = jwt.get_unverified_header(id_token)
     except JWTError:
@@ -116,17 +128,94 @@ async def verify_apple_id_token(id_token: str) -> dict:
             id_token,
             public_key,
             algorithms=["RS256"],
-            audience=settings.APPLE_CLIENT_ID if settings.APPLE_CLIENT_ID else None,
+            audience=settings.APPLE_CLIENT_ID,
             issuer="https://appleid.apple.com",
-            options={
-                "verify_aud": bool(settings.APPLE_CLIENT_ID),
-            },
+            options={"verify_aud": True},
         )
     except JWTError as e:
         logger.warning("Apple ID token verification failed: %s", e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Apple ID token",
+        )
+
+    return payload
+
+
+# ─── Google Sign-In verification ──────────────────────────────────────────────
+
+GOOGLE_KEYS_URL = "https://www.googleapis.com/oauth2/v3/certs"
+_google_keys_cache: dict | None = None
+_google_keys_fetched_at: float = 0
+_GOOGLE_KEYS_TTL = 3600
+
+
+async def _fetch_google_public_keys() -> dict:
+    global _google_keys_cache, _google_keys_fetched_at
+
+    now = time.monotonic()
+    if _google_keys_cache and (now - _google_keys_fetched_at) < _GOOGLE_KEYS_TTL:
+        return _google_keys_cache
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(GOOGLE_KEYS_URL, timeout=10)
+        resp.raise_for_status()
+
+    _google_keys_cache = resp.json()
+    _google_keys_fetched_at = now
+    return _google_keys_cache
+
+
+async def verify_google_id_token(id_token: str) -> dict:
+    if not settings.GOOGLE_CLIENT_ID:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Google auth not configured",
+        )
+
+    try:
+        unverified_header = jwt.get_unverified_header(id_token)
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google ID token",
+        )
+
+    kid = unverified_header.get("kid")
+    if not kid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Google ID token missing key ID",
+        )
+
+    keys_data = await _fetch_google_public_keys()
+    matching_key = None
+    for key_data in keys_data.get("keys", []):
+        if key_data.get("kid") == kid:
+            matching_key = key_data
+            break
+
+    if not matching_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Google ID token signed with unknown key",
+        )
+
+    public_key = jwk.construct(matching_key)
+
+    try:
+        payload = jwt.decode(
+            id_token,
+            public_key,
+            algorithms=["RS256"],
+            audience=settings.GOOGLE_CLIENT_ID,
+            issuer=["https://accounts.google.com", "accounts.google.com"],
+        )
+    except JWTError as e:
+        logger.warning("Google ID token verification failed: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google ID token",
         )
 
     return payload
@@ -196,13 +285,28 @@ DEFAULT_CATEGORIES = [
     {"name": "Зарплата", "icon": "cash", "color": "#10B981", "type": "income"},
     {"name": "Фриланс", "icon": "laptop", "color": "#6366F1", "type": "income"},
     {"name": "Инвестиции", "icon": "trending-up", "color": "#8B5CF6", "type": "income"},
-    {"name": "Еда и напитки", "icon": "restaurant", "color": "#F59E0B", "type": "expense"},
+    {
+        "name": "Еда и напитки",
+        "icon": "restaurant",
+        "color": "#F59E0B",
+        "type": "expense",
+    },
     {"name": "Транспорт", "icon": "car", "color": "#3B82F6", "type": "expense"},
     {"name": "Покупки", "icon": "cart", "color": "#EC4899", "type": "expense"},
-    {"name": "Развлечения", "icon": "game-controller", "color": "#F97316", "type": "expense"},
+    {
+        "name": "Развлечения",
+        "icon": "game-controller",
+        "color": "#F97316",
+        "type": "expense",
+    },
     {"name": "Здоровье", "icon": "fitness", "color": "#EF4444", "type": "expense"},
     {"name": "Счета и ЖКХ", "icon": "flash", "color": "#14B8A6", "type": "expense"},
     {"name": "Образование", "icon": "school", "color": "#0EA5E9", "type": "expense"},
     {"name": "Подарки", "icon": "gift", "color": "#D946EF", "type": "both"},
-    {"name": "Другое", "icon": "ellipsis-horizontal", "color": "#6B7280", "type": "both"},
+    {
+        "name": "Другое",
+        "icon": "ellipsis-horizontal",
+        "color": "#6B7280",
+        "type": "both",
+    },
 ]

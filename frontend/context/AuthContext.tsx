@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { setAuthToken } from '@/services/api-client';
 import { authService } from '@/services/auth';
 import type {
@@ -14,14 +14,20 @@ import type {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+interface PendingVerification {
+  session_id: string;
+  email: string;
+}
+
 interface AuthContextValue {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
-  /** Set when session restore failed (e.g. network or 401); cleared on next auth attempt or when user navigates to auth. */
   authError: string | null;
   clearAuthError: () => void;
+  pendingVerification: PendingVerification | null;
+  setPendingVerification: (v: PendingVerification | null) => void;
   login: (payload: LoginPayload) => Promise<SessionResponse>;
   signup: (payload: SignupPayload) => Promise<SessionResponse>;
   verifyCode: (payload: VerifyCodePayload) => Promise<void>;
@@ -34,6 +40,15 @@ const TOKEN_KEY = '@fintrack_token';
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function getTokenExp(token: string): number | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.exp === 'number' ? payload.exp : null;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Provider ────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -41,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [pendingVerification, setPendingVerification] = useState<PendingVerification | null>(null);
 
   const clearAuthError = useCallback(() => setAuthError(null), []);
 
@@ -48,27 +64,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(t);
     setAuthToken(t);
     if (t) {
-      await AsyncStorage.setItem(TOKEN_KEY, t);
+      await SecureStore.setItemAsync(TOKEN_KEY, t);
     } else {
-      await AsyncStorage.removeItem(TOKEN_KEY);
+      await SecureStore.deleteItemAsync(TOKEN_KEY);
     }
   }, []);
 
   useEffect(() => {
     (async () => {
       try {
-        const stored = await AsyncStorage.getItem(TOKEN_KEY);
+        const stored = await SecureStore.getItemAsync(TOKEN_KEY);
         if (stored) {
-          setAuthToken(stored);
-          const me = await authService.me();
-          setToken(stored);
-          setUser(me);
-          setAuthError(null);
+          const exp = getTokenExp(stored);
+          if (exp !== null && exp * 1000 < Date.now()) {
+            await SecureStore.deleteItemAsync(TOKEN_KEY);
+          } else {
+            setAuthToken(stored);
+            const me = await authService.me();
+            setToken(stored);
+            setUser(me);
+            setAuthError(null);
+          }
         }
       } catch (e) {
-        await AsyncStorage.removeItem(TOKEN_KEY);
+        console.error('Session restore error:', e);
+        await SecureStore.deleteItemAsync(TOKEN_KEY);
         setAuthToken(null);
-        setAuthError(e instanceof Error ? e.message : 'Session expired or unavailable. Please sign in again.');
+        setAuthError('Session expired. Please sign in again.');
       } finally {
         setLoading(false);
       }
@@ -87,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const res = await authService.verifyCode(payload);
     await persistToken(res.access_token);
     setUser(res.user);
+    setPendingVerification(null);
   }, [persistToken]);
 
   const resendCode = useCallback(async (payload: ResendCodePayload): Promise<SessionResponse> => {
@@ -102,8 +125,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await authService.logout();
-    } catch {
-      // ignore logout errors
+    } catch (e) {
+      console.error('Logout error:', e);
     }
     setUser(null);
     await persistToken(null);
@@ -118,6 +141,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         authError,
         clearAuthError,
+        pendingVerification,
+        setPendingVerification,
         login,
         signup,
         verifyCode,

@@ -62,7 +62,9 @@ async def update_category(
     )
     category = result.scalar_one_or_none()
     if not category:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
+        )
 
     update_data = body.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -92,7 +94,9 @@ async def delete_category(
     )
     category = result.scalar_one_or_none()
     if not category:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
+        )
 
     await db.delete(category)
     await db.commit()

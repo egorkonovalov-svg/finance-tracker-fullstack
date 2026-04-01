@@ -1,11 +1,4 @@
-import logging
-import sys
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-logger = logging.getLogger(__name__)
-
-_INSECURE_JWT_SECRET = "change-me-to-a-random-secret-in-production"
 
 
 class Settings(BaseSettings):
@@ -14,7 +7,7 @@ class Settings(BaseSettings):
     )
 
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/fintrack"
-    JWT_SECRET: str = _INSECURE_JWT_SECRET
+    JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     ENVIRONMENT: str = "local"
@@ -23,6 +16,7 @@ class Settings(BaseSettings):
     SQL_ECHO: bool = False
 
     APPLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_ID: str = ""
 
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
@@ -31,14 +25,7 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = ""
     VERIFICATION_CODE_EXPIRE_MINUTES: int = 10
     IS_DROP_TABLES: bool = False
+    DEV_ADMIN_KEY: str = ""
 
 
 settings = Settings()
-
-if settings.JWT_SECRET == _INSECURE_JWT_SECRET and settings.ENVIRONMENT != "local":
-    logger.critical(
-        "JWT_SECRET is set to the insecure default. "
-        "Set a strong, random JWT_SECRET environment variable before running in %s.",
-        settings.ENVIRONMENT,
-    )
-    sys.exit(1)

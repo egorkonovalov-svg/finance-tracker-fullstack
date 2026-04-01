@@ -21,9 +21,10 @@ def _smtp_configured() -> bool:
 async def send_verification_email(to: str, code: str) -> None:
     # In local dev, always print the code to the terminal so you can log in without SMTP
     if settings.ENVIRONMENT == "local":
-        logger.warning(">>> FinTrack verification code for %s: %s <<<", to, code)
         if not _smtp_configured():
-            logger.warning("SMTP not configured -- use the code above to verify")
+            logger.warning(
+                "SMTP not configured -- skipping verification email for %s", to
+            )
             return
 
     if not _smtp_configured():

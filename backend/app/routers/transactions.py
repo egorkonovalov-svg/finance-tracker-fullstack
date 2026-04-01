@@ -59,7 +59,8 @@ def _apply_filters(
     if amount_max is not None:
         q = q.where(Transaction.amount <= amount_max)
     if search:
-        pattern = f"%{search}%"
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{escaped}%"
         q = q.where(
             Transaction.note.ilike(pattern) | Transaction.category.ilike(pattern)
         )
@@ -90,8 +91,8 @@ async def list_transactions(
     date_to: datetime | None = None,
     amount_min: float | None = None,
     amount_max: float | None = None,
-    search: str | None = None,
-    page: int = Query(default=1, ge=1),
+    search: str | None = Query(default=None, max_length=100),
+    page: int = Query(default=1, ge=1, le=10000),
     page_size: int = Query(default=20, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -111,9 +112,7 @@ async def list_transactions(
     )
     total = (await db.execute(count_q)).scalar() or 0
 
-    items_q = _apply_filters(
-        select(Transaction), current_user.id, **filter_kwargs
-    )
+    items_q = _apply_filters(select(Transaction), current_user.id, **filter_kwargs)
     items_q = (
         items_q.order_by(Transaction.date.desc())
         .offset((page - 1) * page_size)
@@ -145,11 +144,15 @@ async def get_transaction(
     )
     tx = result.scalar_one_or_none()
     if not tx:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found"
+        )
     return _to_response(tx)
 
 
-@router.post("", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_transaction(
     body: TransactionCreate,
     current_user: User = Depends(get_current_user),
@@ -177,7 +180,9 @@ async def update_transaction(
     )
     tx = result.scalar_one_or_none()
     if not tx:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found"
+        )
 
     update_data = body.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -202,7 +207,9 @@ async def delete_transaction(
     )
     tx = result.scalar_one_or_none()
     if not tx:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found"
+        )
 
     await db.delete(tx)
     await db.commit()
