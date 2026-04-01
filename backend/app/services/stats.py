@@ -42,21 +42,15 @@ async def _get_by_category_breakdown(
 ) -> list[dict]:
     by_cat_q = (
         select(
-            Transaction.category,
+            Category.name.label("category"),
             func.sum(Transaction.amount).label("amount"),
             func.coalesce(Category.color, settings.DEFAULT_CATEGORY_COLOR).label(
                 "color"
             ),
         )
-        .outerjoin(
-            Category,
-            and_(
-                Category.user_id == user_id,
-                Category.name == Transaction.category,
-            ),
-        )
+        .outerjoin(Category, Category.id == Transaction.category_id)
         .where(and_(base_filter, Transaction.type == "expense"))
-        .group_by(Transaction.category, Category.color)
+        .group_by(Category.name, Category.color)
         .order_by(func.sum(Transaction.amount).desc())
     )
     by_cat_rows = (await db.execute(by_cat_q)).all()

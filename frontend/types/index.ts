@@ -7,6 +7,7 @@ export interface Transaction {
   type: TransactionType;
   amount: number;
   currency: string;
+  category_id: string;
   category: string;
   note?: string;
   date: string; // ISO 8601
@@ -17,7 +18,7 @@ export interface CreateTransactionPayload {
   type: TransactionType;
   amount: number;
   currency: string;
-  category: string;
+  category_id: string;
   note?: string;
   date: string;
   recurring?: boolean;
@@ -58,7 +59,7 @@ export interface PaginatedResponse<T> {
 
 export interface TransactionFilters {
   type?: TransactionType;
-  category?: string;
+  category_id?: string;
   date_from?: string;
   date_to?: string;
   amount_min?: number;

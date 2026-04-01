@@ -1,5 +1,5 @@
 import { api, USE_MOCK } from './api-client';
-import { MOCK_TRANSACTIONS } from './mock-data';
+import { MOCK_CATEGORIES, MOCK_TRANSACTIONS } from './mock-data';
 import type {
   CreateTransactionPayload,
   PaginatedResponse,
@@ -20,7 +20,7 @@ function delay(ms = 300) {
 
 function matchesFilters(tx: Transaction, f: TransactionFilters): boolean {
   if (f.type && tx.type !== f.type) return false;
-  if (f.category && tx.category !== f.category) return false;
+  if (f.category_id && tx.category_id !== f.category_id) return false;
   if (f.date_from && tx.date < f.date_from) return false;
   if (f.date_to && tx.date > f.date_to) return false;
   if (f.amount_min !== undefined && tx.amount < f.amount_min) return false;
@@ -57,7 +57,8 @@ async function mockGetTransaction(id: string): Promise<Transaction> {
 
 async function mockCreateTransaction(data: CreateTransactionPayload): Promise<Transaction> {
   await delay(200);
-  const tx: Transaction = { ...data, id: `tx-${++nextId}` };
+  const category = MOCK_CATEGORIES.find((c) => c.id === data.category_id)?.name ?? '';
+  const tx: Transaction = { ...data, id: `tx-${++nextId}`, category };
   mockStore = [tx, ...mockStore];
   return tx;
 }
