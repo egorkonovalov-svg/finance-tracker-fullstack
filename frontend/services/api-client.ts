@@ -40,10 +40,7 @@ class ApiError extends Error {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function buildUrl(path: string, params?: Record<string, string | number | boolean | undefined>): string {
-  const base = BASE_URL.startsWith('http')
-    ? BASE_URL
-    : `${typeof window !== 'undefined' ? window.location.origin : ''}${BASE_URL}`;
-  const url = new URL(`${base}${path}`);
+  const url = new URL(`${BASE_URL}${path}`);
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined) url.searchParams.set(k, String(v));
