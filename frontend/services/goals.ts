@@ -1,4 +1,5 @@
 import { api, USE_MOCK } from './api-client';
+import { mockDelay } from '../utils/mock';
 import type {
   CreateGoalPayload,
   Goal,
@@ -10,17 +11,14 @@ import type {
 let mockStore: Goal[] = [];
 let nextId = 1;
 
-function delay(ms = 200) {
-  return new Promise((r) => setTimeout(r, ms));
-}
 
 async function mockGetAll(): Promise<Goal[]> {
-  await delay();
+  await mockDelay(200);
   return [...mockStore];
 }
 
 async function mockCreate(data: CreateGoalPayload): Promise<Goal> {
-  await delay();
+  await mockDelay(200);
   const goal: Goal = {
     id: `goal-${++nextId}`,
     name: data.name,
@@ -34,7 +32,7 @@ async function mockCreate(data: CreateGoalPayload): Promise<Goal> {
 }
 
 async function mockUpdate(id: string, data: UpdateGoalPayload): Promise<Goal> {
-  await delay();
+  await mockDelay(200);
   const idx = mockStore.findIndex((g) => g.id === id);
   if (idx === -1) throw new Error(`Goal ${id} not found`);
   mockStore[idx] = { ...mockStore[idx], ...data };
@@ -42,7 +40,7 @@ async function mockUpdate(id: string, data: UpdateGoalPayload): Promise<Goal> {
 }
 
 async function mockRemove(id: string): Promise<void> {
-  await delay();
+  await mockDelay(200);
   mockStore = mockStore.filter((g) => g.id !== id);
 }
 
