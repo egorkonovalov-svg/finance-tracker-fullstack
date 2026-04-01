@@ -3,7 +3,11 @@
  * Set EXPO_PUBLIC_USE_MOCK=true in .env to use mock data instead of the real API.
  */
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
+const BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ??
+  (typeof window !== 'undefined' && window.location?.origin
+    ? `${window.location.origin}/api/v1`
+    : 'http://localhost:8000/api/v1');
 
 export const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK === 'true';
 
