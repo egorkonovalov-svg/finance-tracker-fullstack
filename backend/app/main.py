@@ -27,12 +27,12 @@ SHOW_DOCS_ENVIRONMENT = ("local",)
 
 
 async def _run_periodic_cleanup():
-    from app.services.auth import cleanup_expired_blocked_tokens
+    from app.services.auth import cleanup_expired_revoked_tokens
 
     while True:
         await asyncio.sleep(3600)  # 1 hour
         try:
-            await cleanup_expired_blocked_tokens()
+            await cleanup_expired_revoked_tokens()
             logger.debug("Expired revoked tokens cleaned up")
         except Exception:
             logger.exception("Revoked token cleanup failed")
