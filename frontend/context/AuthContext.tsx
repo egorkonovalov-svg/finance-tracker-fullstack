@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { setAuthToken } from '@/services/api-client';
 import { authService } from '@/services/auth';
 import type {
@@ -38,6 +39,22 @@ interface AuthContextValue {
 
 const TOKEN_KEY = 'fintrack_token';
 
+// expo-secure-store has no web support; fall back to localStorage on web
+const storage = {
+  getItem: (key: string) =>
+    Platform.OS === 'web'
+      ? Promise.resolve(localStorage.getItem(key))
+      : SecureStore.getItemAsync(key),
+  setItem: (key: string, value: string) =>
+    Platform.OS === 'web'
+      ? Promise.resolve(localStorage.setItem(key, value))
+      : SecureStore.setItemAsync(key, value),
+  deleteItem: (key: string) =>
+    Platform.OS === 'web'
+      ? Promise.resolve(localStorage.removeItem(key))
+      : SecureStore.deleteItemAsync(key),
+};
+
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function getTokenExp(token: string): number | null {
@@ -64,20 +81,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(t);
     setAuthToken(t);
     if (t) {
-      await SecureStore.setItemAsync(TOKEN_KEY, t);
+      await storage.setItem(TOKEN_KEY, t);
     } else {
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
+      await storage.deleteItem(TOKEN_KEY);
     }
   }, []);
 
   useEffect(() => {
     (async () => {
       try {
-        const stored = await SecureStore.getItemAsync(TOKEN_KEY);
+        const stored = await storage.getItem(TOKEN_KEY);
         if (stored) {
           const exp = getTokenExp(stored);
           if (exp !== null && exp * 1000 < Date.now()) {
-            await SecureStore.deleteItemAsync(TOKEN_KEY);
+            await storage.deleteItem(TOKEN_KEY);
           } else {
             setAuthToken(stored);
             const me = await authService.me();
@@ -88,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (e) {
         console.error('Session restore error:', e);
-        await SecureStore.deleteItemAsync(TOKEN_KEY);
+        await storage.deleteItem(TOKEN_KEY);
         setAuthToken(null);
         setAuthError('Session expired. Please sign in again.');
       } finally {
