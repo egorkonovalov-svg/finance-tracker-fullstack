@@ -110,9 +110,6 @@ export const api = {
   put<T>(path: string, body: unknown, opts?: RequestOptions) {
     return request<T>('PUT', path, body, opts);
   },
-  patch<T>(path: string, body: unknown, opts?: RequestOptions) {
-    return request<T>('PATCH', path, body, opts);
-  },
   del<T = void>(path: string, opts?: RequestOptions) {
     return request<T>('DELETE', path, undefined, opts);
   },
