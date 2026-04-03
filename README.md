@@ -18,7 +18,7 @@ This is a monorepo containing both frontend and backend services:
 | Backend | FastAPI, SQLAlchemy 2.0, Pydantic v2 |
 | Database | PostgreSQL (asyncpg) |
 | Auth | JWT with email 2FA |
-| Deployment | Docker, Vercel (frontend), Supabase (DB) |
+| Deployment | Docker, Vercel (frontend and backend), Supabase (DB) |
 
 For detailed architecture documentation, see [CLAUDE.md](./CLAUDE.md).
 
