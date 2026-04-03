@@ -11,6 +11,21 @@ const MIN_PASSWORD_LENGTH = 8;
 
 type AuthMode = 'login' | 'signup';
 
+/**
+ * Manages email/password authentication form state and submission.
+ *
+ * Handles both login and signup modes, validates email format and minimum
+ * password length, calls the appropriate auth service method, stores the
+ * pending verification session, and navigates to `/verify-code`.
+ *
+ * @returns Form state fields (`mode`, `email`, `password`, `name`,
+ *   `showPassword`, `submitting`) with their setters, plus `handleSubmit`.
+ *
+ * @example
+ * ```tsx
+ * const { email, setEmail, handleSubmit, submitting } = useEmailPasswordAuth();
+ * ```
+ */
 export function useEmailPasswordAuth() {
   const { t } = useTranslation();
   const { login, signup, setPendingVerification } = useAuth();

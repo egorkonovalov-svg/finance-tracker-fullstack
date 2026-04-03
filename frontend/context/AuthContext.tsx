@@ -173,6 +173,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Access the authentication context.
+ *
+ * Must be called inside an {@link AuthProvider}.
+ *
+ * @returns Authentication state (`user`, `token`, `isAuthenticated`, `loading`,
+ *   `authError`, `pendingVerification`) and methods (`login`, `signup`,
+ *   `verifyCode`, `resendCode`, `socialAuth`, `logout`, `clearAuthError`,
+ *   `setPendingVerification`).
+ * @throws {Error} If called outside an `AuthProvider`.
+ *
+ * @example
+ * ```tsx
+ * const { isAuthenticated, logout } = useAuth();
+ * ```
+ */
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');

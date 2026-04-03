@@ -9,6 +9,27 @@ import { extractErrorMessage } from '@/utils/error';
 export const CODE_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
 
+/**
+ * Manages 6-digit email verification code input, submission, and resend logic.
+ *
+ * Features:
+ * - Auto-advances focus to the next input after each digit is entered.
+ * - Backspace on an empty field moves focus back and clears the previous field.
+ * - Pasting a full 6-digit string fills all fields and auto-submits.
+ * - Enforces a 60-second cooldown before a new code can be requested.
+ * - On successful verification, `AuthContext` handles navigation.
+ *
+ * Reads the pending session from `AuthContext.pendingVerification`.
+ *
+ * @returns `{ digits, error, submitting, resending, cooldown, inputRefs,
+ *   maskedEmail, submitCode, handleDigitChange, handleKeyPress, handlePaste,
+ *   handleResend }`.
+ *
+ * @example
+ * ```tsx
+ * const { digits, handleDigitChange, cooldown, handleResend } = useVerificationCode();
+ * ```
+ */
 export function useVerificationCode() {
   const { t } = useTranslation();
   const { verifyCode, resendCode, pendingVerification } = useAuth();

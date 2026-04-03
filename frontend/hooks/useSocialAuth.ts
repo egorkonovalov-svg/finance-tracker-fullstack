@@ -10,6 +10,23 @@ interface Options {
   setSubmitting: (v: boolean) => void;
 }
 
+/**
+ * Provides Google and Apple sign-in handlers.
+ *
+ * - **Google:** Only available in dev mode with mock data enabled
+ *   (`__DEV__ && USE_MOCK`). Uses a static mock token in place of a real OAuth flow.
+ * - **Apple:** Uses `expo-apple-authentication`. Silently ignores
+ *   `ERR_REQUEST_CANCELED` when the user dismisses the native sheet.
+ *
+ * @param options.setSubmitting - Called with `true`/`false` around each sign-in
+ *   attempt so the parent can show a loading indicator.
+ * @returns `{ handleGoogleSignIn, handleAppleSignIn }` async event handlers.
+ *
+ * @example
+ * ```tsx
+ * const { handleAppleSignIn } = useSocialAuth({ setSubmitting });
+ * ```
+ */
 export function useSocialAuth({ setSubmitting }: Options) {
   const { t } = useTranslation();
   const { socialAuth } = useAuth();

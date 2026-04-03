@@ -6,9 +6,17 @@ import { localeToBCP47 } from '@/hooks/useTranslation';
 /**
  * Convenience hook for currency conversion and formatting.
  *
- * All stored amounts are in RUB. This hook reads the selected currency,
- * locale, and live exchange rates from AppContext, then provides helpers to
+ * All amounts are stored in RUB. This hook reads the selected currency,
+ * locale, and live exchange rates from AppContext, then exposes helpers to
  * convert and format on the fly.
+ *
+ * @returns `{ currency, symbol, rate, ratesLoading, convert, convertAndFormat }`.
+ *
+ * @example
+ * ```tsx
+ * const { convertAndFormat } = useCurrency();
+ * return <Text>{convertAndFormat(transaction.amount)}</Text>;
+ * ```
  */
 export function useCurrency() {
   const { currency, locale, exchangeRates, ratesLoading } = useApp();

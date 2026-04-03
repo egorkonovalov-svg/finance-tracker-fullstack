@@ -15,6 +15,14 @@ export const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK === 'true';
 
 let authToken: string | null = null;
 
+/**
+ * Set (or clear) the JWT used in the `Authorization: Bearer` header for every
+ * subsequent {@link request} call.
+ *
+ * Call with a non-null token after login and with `null` after logout.
+ *
+ * @param token - JWT access token, or `null` to remove the auth header.
+ */
 export function setAuthToken(token: string | null) {
   authToken = token;
 }
@@ -30,8 +38,22 @@ interface RequestOptions {
   timeoutMs?: number;
 }
 
+/**
+ * Thrown by {@link request} when the server returns a non-2xx HTTP status.
+ *
+ * @example
+ * ```ts
+ * try {
+ *   await api.get('/me');
+ * } catch (e) {
+ *   if (e instanceof ApiError && e.status === 401) { // handle unauthorised }
+ * }
+ * ```
+ */
 class ApiError extends Error {
+  /** HTTP status code returned by the server. */
   status: number;
+  /** Parsed JSON response body, or `null` if the body was not valid JSON. */
   body: unknown;
   constructor(status: number, body: unknown) {
     super(`API error ${status}`);
@@ -43,6 +65,14 @@ class ApiError extends Error {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/**
+ * Construct the full request URL from `BASE_URL`, `path`, and optional query
+ * parameters. Keys with `undefined` values are omitted from the query string.
+ *
+ * @param path - Endpoint path, e.g. `'/transactions'`.
+ * @param params - Optional key/value pairs appended as query string.
+ * @returns Fully qualified URL string.
+ */
 function buildUrl(path: string, params?: Record<string, string | number | boolean | undefined>): string {
   const url = new URL(`${BASE_URL}${path}`);
   if (params) {
@@ -66,6 +96,25 @@ function withTimeout(signal: AbortSignal | undefined, ms: number): AbortSignal {
   return controller.signal;
 }
 
+/**
+ * Core HTTP client used by all `api.*` methods.
+ *
+ * Automatically:
+ * - Builds the full URL with query params via {@link buildUrl}.
+ * - Injects `Authorization: Bearer <token>` when a token is set via {@link setAuthToken}.
+ * - Applies a 15-second timeout unless overridden by `opts.timeoutMs`.
+ * - Returns `undefined` (cast as `T`) for 204 No Content responses.
+ *
+ * @param method - HTTP method (`'GET'`, `'POST'`, `'PUT'`, `'DELETE'`).
+ * @param path - API endpoint path, e.g. `'/transactions'`.
+ * @param body - Optional request body; serialized to JSON automatically.
+ * @param opts - Optional per-request configuration (headers, params, signal, timeout).
+ * @returns Parsed JSON response body typed as `T`.
+ * @throws {ApiError} When the server returns a non-2xx status. The error carries
+ *   `status` (HTTP code) and `body` (parsed JSON response or `null`).
+ * @throws {DOMException} `AbortError` when the request times out or is cancelled
+ *   via `opts.signal`.
+ */
 async function request<T>(
   method: string,
   path: string,
