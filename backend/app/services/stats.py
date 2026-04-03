@@ -13,6 +13,17 @@ from app.models.transaction import Transaction
 async def _get_income_expense_totals(
     db: AsyncSession, base_filter
 ) -> tuple[float, float]:
+    """Sum income and expense totals for transactions matching a SQLAlchemy filter.
+
+    Args:
+        db: Async database session.
+        base_filter: A SQLAlchemy WHERE clause (e.g. from `and_(...)`) already
+            scoped to the target user and date range.
+
+    Returns:
+        A tuple of (total_income, total_expenses) as floats, both >= 0.
+        Returns (0.0, 0.0) when no transactions match.
+    """
     totals_q = select(
         func.coalesce(
             func.sum(
@@ -40,6 +51,20 @@ async def _get_income_expense_totals(
 async def _get_by_category_breakdown(
     db: AsyncSession, user_id: UUID, base_filter
 ) -> list[dict]:
+    """Return expense totals grouped by category for a given filter.
+
+    Args:
+        db: Async database session.
+        user_id: The authenticated user's UUID (used to scope the category join).
+        base_filter: A SQLAlchemy WHERE clause scoped to the target user/period.
+
+    Returns:
+        List of dicts ordered by amount descending, each with keys:
+            - ``category`` (str | None): Category name; None if uncategorised.
+            - ``amount`` (float): Total expense amount in RUB.
+            - ``color`` (str): Hex color from the category row, or the app
+              default color when the category has no color set.
+    """
     by_cat_q = (
         select(
             Category.name.label("category"),
@@ -63,6 +88,25 @@ async def _get_by_category_breakdown(
 async def _get_daily_breakdown(
     db: AsyncSession, base_filter, year: int, month: int
 ) -> list[dict]:
+    """Return a day-by-day income/expense breakdown for a calendar month.
+
+    Fills in zeroes for days that have no transactions, stopping at today for
+    the current month (so future dates are not included).
+
+    Args:
+        db: Async database session.
+        base_filter: A SQLAlchemy WHERE clause scoped to the target user/period.
+        year: Four-digit year of the target month.
+        month: Month number 1-12.
+
+    Returns:
+        List of dicts in ascending date order from the 1st of the month up to
+        (but not including) today or the last day of the month, whichever is
+        earlier. Each dict has keys:
+            - ``date`` (str): ISO-8601 date string, e.g. ``"2024-03-15"``.
+            - ``income`` (float): Total income for that day in RUB.
+            - ``expense`` (float): Total expenses for that day in RUB.
+    """
     day_col = cast(Transaction.date, Date).label("day")
     daily_q = (
         select(
@@ -119,6 +163,25 @@ async def _get_daily_breakdown(
 async def get_monthly_stats(
     db: AsyncSession, user_id: UUID, year: int, month: int
 ) -> dict:
+    """Aggregate all statistics for a single calendar month.
+
+    Combines income/expense totals, category breakdown, and daily breakdown
+    into a single dict consumed by the ``/transactions/stats`` endpoint.
+
+    Args:
+        db: Async database session.
+        user_id: The authenticated user's UUID.
+        year: Four-digit year of the target month.
+        month: Month number 1-12.
+
+    Returns:
+        Dict with keys:
+            - ``total_income`` (float): Sum of all income transactions in RUB.
+            - ``total_expenses`` (float): Sum of all expense transactions in RUB.
+            - ``balance`` (float): ``total_income - total_expenses``.
+            - ``by_category`` (list[dict]): See ``_get_by_category_breakdown``.
+            - ``daily`` (list[dict]): See ``_get_daily_breakdown``.
+    """
     base_filter = and_(
         Transaction.user_id == user_id,
         extract("year", Transaction.date) == year,
