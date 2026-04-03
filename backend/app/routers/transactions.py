@@ -36,6 +36,26 @@ def _apply_filters(
     amount_max: float | None,
     search: str | None,
 ) -> Select:
+    """Apply optional filters to a transaction SQLAlchemy query.
+
+    All filter arguments are optional; only non-None values are applied. The
+    ``search`` filter matches against the transaction's ``note`` field and the
+    linked category name (case-insensitive, SQL LIKE with escape for ``%``/``_``).
+
+    Args:
+        q: Base ``Select`` query to extend.
+        user_id: Scope results to this user.
+        type: ``"income"`` or ``"expense"``, or ``None`` to include both.
+        category_id: UUID string of the category, or ``None``.
+        date_from: Lower bound (inclusive) on ``Transaction.date``.
+        date_to: Upper bound (inclusive) on ``Transaction.date``.
+        amount_min: Minimum amount in RUB (inclusive).
+        amount_max: Maximum amount in RUB (inclusive).
+        search: Substring to match against note or category name.
+
+    Returns:
+        The extended ``Select`` object with all applicable WHERE clauses added.
+    """
     q = q.where(Transaction.user_id == user_id)
     if type:
         q = q.where(Transaction.type == type)
@@ -65,6 +85,16 @@ def _apply_filters(
 
 
 async def _validate_category(db: AsyncSession, category_id: str, user_id: UUID) -> None:
+    """Verify that a category exists and belongs to the given user.
+
+    Args:
+        db: Async database session.
+        category_id: UUID string of the category to validate.
+        user_id: UUID of the authenticated user.
+
+    Raises:
+        NotFoundError: If no category with the given id and user_id is found.
+    """
     result = await db.execute(
         select(Category).where(
             Category.id == category_id,
@@ -75,12 +105,22 @@ async def _validate_category(db: AsyncSession, category_id: str, user_id: UUID) 
         raise NotFoundError("Category not found")
 
 
-@router.get("/stats", response_model=StatsResponse)
+@router.get(
+    "/stats",
+    response_model=StatsResponse,
+    summary="Get monthly statistics",
+    description=(
+        "Returns aggregated stats for a calendar month: total income, total "
+        "expenses, balance, per-category expense breakdown, and a daily "
+        "income/expense timeline. Defaults to the current month."
+    ),
+)
 async def stats(
     month: str | None = Query(default=None, pattern=r"^\d{4}-\d{2}$"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """Return income/expense/balance statistics for a given month (YYYY-MM)."""
     if month:
         year, m = int(month[:4]), int(month[5:])
     else:
@@ -91,7 +131,16 @@ async def stats(
     return StatsResponse(**data)
 
 
-@router.get("", response_model=TransactionListResponse)
+@router.get(
+    "",
+    response_model=TransactionListResponse,
+    summary="List transactions",
+    description=(
+        "Returns a paginated, filterable list of the user's transactions. "
+        "Supports filtering by type, category, date range, amount range, and "
+        "free-text search across note and category name."
+    ),
+)
 async def list_transactions(
     type: str | None = None,
     category_id: str | None = None,
@@ -105,6 +154,7 @@ async def list_transactions(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """List the current user's transactions with optional filters and pagination."""
     filter_kwargs = dict(
         type=type,
         category_id=category_id,
@@ -139,12 +189,18 @@ async def list_transactions(
     )
 
 
-@router.get("/{transaction_id}", response_model=TransactionResponse)
+@router.get(
+    "/{transaction_id}",
+    response_model=TransactionResponse,
+    summary="Get a single transaction",
+    description="Returns a transaction by ID. Raises 404 if not found or not owned by the user.",
+)
 async def get_transaction(
     transaction_id: UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """Fetch a transaction by UUID."""
     result = await db.execute(
         select(Transaction)
         .options(selectinload(Transaction.category_rel))
@@ -157,13 +213,21 @@ async def get_transaction(
 
 
 @router.post(
-    "", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED
+    "",
+    response_model=TransactionResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a transaction",
+    description=(
+        "Creates a new income or expense transaction. The `category_id` must "
+        "belong to the authenticated user. Amounts are stored in RUB."
+    ),
 )
 async def create_transaction(
     body: TransactionCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """Create a new transaction for the current user."""
     await _validate_category(db, body.category_id, current_user.id)
     tx = Transaction(user_id=current_user.id, **body.model_dump())
     db.add(tx)
@@ -172,13 +236,22 @@ async def create_transaction(
     return TransactionResponse.model_validate(tx)
 
 
-@router.put("/{transaction_id}", response_model=TransactionResponse)
+@router.put(
+    "/{transaction_id}",
+    response_model=TransactionResponse,
+    summary="Update a transaction",
+    description=(
+        "Partial update — only fields present in the request body are changed. "
+        "If `category_id` is updated it is validated against the user's categories."
+    ),
+)
 async def update_transaction(
     transaction_id: UUID,
     body: TransactionUpdate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """Partially update a transaction."""
     tx = await get_or_404(
         db, Transaction, transaction_id, current_user.id, detail="Transaction not found"
     )
@@ -194,12 +267,18 @@ async def update_transaction(
     return TransactionResponse.model_validate(tx)
 
 
-@router.delete("/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{transaction_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a transaction",
+    description="Permanently deletes a transaction. Returns 204 No Content on success.",
+)
 async def delete_transaction(
     transaction_id: UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """Delete a transaction by UUID."""
     tx = await get_or_404(
         db, Transaction, transaction_id, current_user.id, detail="Transaction not found"
     )
