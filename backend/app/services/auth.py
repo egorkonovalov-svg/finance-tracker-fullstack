@@ -27,6 +27,18 @@ logger = logging.getLogger(__name__)
 async def add_token_to_blocklist(
     db: AsyncSession, jti: str, user_id: UUID, expires_at: datetime
 ) -> None:
+    """Persist a revoked JWT to the database blocklist.
+
+    Called during logout. The token remains blocked until its natural expiry,
+    after which ``cleanup_expired_revoked_tokens`` may remove the row.
+
+    Args:
+        db: Async database session.
+        jti: The ``jti`` claim from the JWT payload (unique token identifier).
+        user_id: UUID of the user who owns the token.
+        expires_at: UTC datetime when the original JWT expires; used for
+            cleanup scheduling.
+    """
     from app.models.revoked_token import RevokedToken
 
     record = RevokedToken(jti=jti, user_id=user_id, expires_at=expires_at)
@@ -35,6 +47,15 @@ async def add_token_to_blocklist(
 
 
 async def is_token_blocklisted(db: AsyncSession, jti: str) -> bool:
+    """Check whether a JWT has been revoked.
+
+    Args:
+        db: Async database session.
+        jti: The ``jti`` claim from the JWT payload.
+
+    Returns:
+        ``True`` if the token is in the revocation list, ``False`` otherwise.
+    """
     from app.models.revoked_token import RevokedToken
 
     result = await db.execute(select(RevokedToken).where(RevokedToken.jti == jti))
@@ -42,6 +63,12 @@ async def is_token_blocklisted(db: AsyncSession, jti: str) -> bool:
 
 
 async def cleanup_expired_revoked_tokens() -> None:
+    """Delete expired rows from the token blocklist table.
+
+    Opens its own session (does not accept one as a parameter) so it can be
+    called from a background task or scheduler without an active request
+    context. Rows whose ``expires_at`` is in the past are deleted in bulk.
+    """
     from app.models.revoked_token import RevokedToken
 
     async with async_session() as db:
@@ -57,10 +84,27 @@ async def cleanup_expired_revoked_tokens() -> None:
 
 
 def hash_password(password: str) -> str:
+    """Hash a plain-text password with bcrypt.
+
+    Args:
+        password: Plain-text password provided by the user.
+
+    Returns:
+        bcrypt hash string suitable for storage in the database.
+    """
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
+    """Verify a plain-text password against a stored bcrypt hash.
+
+    Args:
+        plain: The plain-text password to check.
+        hashed: The bcrypt hash previously produced by ``hash_password``.
+
+    Returns:
+        ``True`` if the password matches, ``False`` otherwise.
+    """
     return bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
@@ -68,6 +112,19 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(user_id: str) -> str:
+    """Create a signed JWT access token for a user.
+
+    The token payload includes:
+        - ``sub``: user UUID string.
+        - ``exp``: UTC expiry timestamp (configured via ``JWT_ACCESS_TOKEN_EXPIRE_MINUTES``).
+        - ``jti``: 32-character random hex string for revocation tracking.
+
+    Args:
+        user_id: String representation of the user's UUID.
+
+    Returns:
+        A signed JWT string using the algorithm and secret from ``settings``.
+    """
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
     )
@@ -83,6 +140,19 @@ _apple_keys_fetched_at: float = 0
 
 
 async def _fetch_apple_public_keys() -> dict:
+    """Fetch Apple's JWKS public keys, with module-level in-memory caching.
+
+    The result is cached for ``settings.APPLE_KEYS_TTL`` seconds (measured via
+    ``time.monotonic``). A fresh HTTP GET to ``settings.APPLE_KEYS_URL`` is only
+    issued when the cache is empty or stale.
+
+    Returns:
+        The raw parsed JSON dict from Apple's JWKS endpoint (contains a
+        ``"keys"`` list of JWK objects).
+
+    Raises:
+        AuthenticationError: If Apple returns a non-2xx status code.
+    """
     global _apple_keys_cache, _apple_keys_fetched_at
 
     now = time.monotonic()
@@ -148,12 +218,36 @@ async def verify_apple_id_token(id_token: str) -> dict:
 
 
 def generate_verification_code() -> str:
+    """Generate a cryptographically random 6-digit verification code.
+
+    Uses ``secrets.randbelow`` (not ``random``) to ensure unpredictability.
+
+    Returns:
+        A zero-padded 6-digit string, e.g. ``"042731"``.
+    """
     return f"{secrets.randbelow(1000000):06d}"
 
 
 async def create_verification(
     db: AsyncSession, user_id: UUID, purpose: str
 ) -> tuple[str, str]:
+    """Create a VerificationCode record and return its session ID and code.
+
+    The code expires after ``settings.VERIFICATION_CODE_EXPIRE_MINUTES`` minutes.
+    The record's UUID is used as the ``session_id`` returned to the client, which
+    must pass it back with the code to ``validate_verification_code``.
+
+    Args:
+        db: Async database session.
+        user_id: UUID of the user for whom the code is created.
+        purpose: One of ``"signup"`` or ``"login"`` — stored on the record
+            and checked during verification.
+
+    Returns:
+        A tuple of ``(session_id, code)`` where ``session_id`` is the UUID
+        string of the new record, and ``code`` is the raw 6-digit string to
+        email to the user.
+    """
     code = generate_verification_code()
     expires = datetime.now(timezone.utc) + timedelta(
         minutes=settings.VERIFICATION_CODE_EXPIRE_MINUTES
@@ -171,6 +265,26 @@ async def create_verification(
 async def validate_verification_code(
     db: AsyncSession, session_id: str, code: str
 ) -> VerificationCode:
+    """Validate a verification code and mark it used on success.
+
+    Looks up the VerificationCode by session_id, then checks expiry, attempt
+    count, and code equality in that order. Increments ``attempts`` on each
+    wrong guess.
+
+    Args:
+        db: Async database session.
+        session_id: UUID string of the VerificationCode row (returned by
+            ``create_verification``).
+        code: The 6-digit string entered by the user.
+
+    Returns:
+        The validated (and now marked-used) ``VerificationCode`` ORM object.
+
+    Raises:
+        AuthenticationError: If the session is missing, already used, expired,
+            or the code is wrong.
+        RateLimitError: If ``settings.MAX_VERIFICATION_ATTEMPTS`` is exceeded.
+    """
     result = await db.execute(
         select(VerificationCode).where(VerificationCode.id == UUID(session_id))
     )
@@ -200,6 +314,15 @@ async def validate_verification_code(
 
 
 async def seed_categories(db: AsyncSession, user_id) -> None:
+    """Insert the default category set for a newly registered user.
+
+    Reads from ``app.constants.DEFAULT_CATEGORIES`` (12 entries). Does not
+    commit — the caller is responsible for committing the session.
+
+    Args:
+        db: Async database session.
+        user_id: UUID of the user who should own the new categories.
+    """
     for cat in DEFAULT_CATEGORIES:
         db.add(Category(user_id=user_id, **cat))
 
@@ -207,6 +330,28 @@ async def seed_categories(db: AsyncSession, user_id) -> None:
 async def get_or_create_user(
     db: AsyncSession, email: str, password: str, name: str | None
 ) -> User:
+    """Fetch an existing unverified user or create a new one for email/password signup.
+
+    Three cases:
+    1. Email exists and user is verified -> raises ``ConflictError``.
+    2. Email exists but user is not yet verified -> updates the password hash
+       and name (allows retrying signup with a new password).
+    3. Email not found -> creates a new ``User`` with ``is_verified=False``.
+
+    Does not commit — the caller must commit after sending the verification email.
+
+    Args:
+        db: Async database session.
+        email: User's email address.
+        password: Plain-text password to hash and store.
+        name: Optional display name.
+
+    Returns:
+        The new or updated ``User`` ORM object (not yet verified).
+
+    Raises:
+        ConflictError: If the email is already registered and verified.
+    """
     result = await db.execute(select(User).where(User.email == email))
     existing = result.scalar_one_or_none()
 
@@ -233,6 +378,23 @@ async def get_or_create_user(
 async def get_or_create_social_user(
     db: AsyncSession, email: str, name: str | None, provider: str
 ) -> tuple[User, bool]:
+    """Fetch or create a user for social (OAuth) sign-in.
+
+    If the email is not found a new ``User`` is created with ``is_verified=True``
+    and the default category set is seeded immediately. If the email exists but
+    ``is_verified`` is ``False``, it is set to ``True`` (allows social login to
+    recover an incomplete email signup).
+
+    Args:
+        db: Async database session.
+        email: Email address extracted from the verified provider token.
+        name: Display name from the provider, or ``None``.
+        provider: Provider identifier string, e.g. ``"google"`` or ``"apple"``.
+
+    Returns:
+        A tuple of ``(user, is_new)`` where ``is_new`` is ``True`` only when a
+        brand-new account was created during this call.
+    """
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
 
@@ -260,6 +422,18 @@ _GOOGLE_KEYS_TTL = 3600
 
 
 async def _fetch_google_public_keys() -> dict:
+    """Fetch Google's JWKS public keys, with module-level in-memory caching.
+
+    Mirrors the Apple equivalent. The cache TTL is ``_GOOGLE_KEYS_TTL`` seconds
+    (3600). A fresh HTTP GET to ``GOOGLE_KEYS_URL`` is only issued when the
+    cache is empty or stale.
+
+    Returns:
+        The raw parsed JSON dict from Google's JWKS endpoint.
+
+    Raises:
+        AuthenticationError: If Google returns a non-2xx status code.
+    """
     global _google_keys_cache, _google_keys_fetched_at
 
     now = time.monotonic()
@@ -281,6 +455,22 @@ async def _fetch_google_public_keys() -> dict:
 
 
 async def verify_google_id_token(id_token: str) -> dict:
+    """Verify a Google ID token by checking its signature against Google's public keys.
+
+    Decodes the token header to extract the ``kid``, fetches/caches Google's
+    JWKS, finds the matching key, and then decodes+validates the full token
+    (audience, issuer, signature).
+
+    Args:
+        id_token: The raw ID token string received from the Google Sign-In SDK.
+
+    Returns:
+        The decoded JWT payload dict (includes ``email``, ``name``, etc.).
+
+    Raises:
+        AuthenticationError: If Google auth is not configured, the token header
+            is malformed, the signing key is unknown, or JWT validation fails.
+    """
     if not settings.GOOGLE_CLIENT_ID:
         raise AuthenticationError("Google auth not configured")
 
