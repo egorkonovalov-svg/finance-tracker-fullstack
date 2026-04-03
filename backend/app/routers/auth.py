@@ -51,6 +51,15 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 def _build_auth_response(user: User, token: str) -> AuthResponse:
+    """Build the standard AuthResponse from a User ORM object and a JWT string.
+
+    Args:
+        user: The authenticated User ORM instance.
+        token: A signed JWT access token string.
+
+    Returns:
+        ``AuthResponse`` containing a ``UserResponse`` sub-object and the token.
+    """
     return AuthResponse(
         user=UserResponse(
             id=str(user.id),
@@ -66,11 +75,18 @@ def _build_auth_response(user: User, token: str) -> AuthResponse:
     "/signup",
     response_model=VerificationPendingResponse,
     status_code=status.HTTP_201_CREATED,
+    summary="Register a new account",
+    description=(
+        "Creates a new user (or refreshes an unverified one) and sends a "
+        "6-digit verification code to the supplied email address. "
+        "Returns a `session_id` to be passed to `/auth/verify-code`."
+    ),
 )
 @limiter.limit(RATE_LIMIT_AUTH_DEFAULT)
 async def signup(
     request: Request, body: SignupRequest, db: AsyncSession = Depends(get_db)
 ):
+    """Register a new account and initiate email verification."""
     user = await get_or_create_user(db, body.email, body.password, body.name)
 
     session_id, code = await create_verification(db, user.id, "signup")
@@ -85,11 +101,21 @@ async def signup(
     )
 
 
-@router.post("/login", response_model=VerificationPendingResponse)
+@router.post(
+    "/login",
+    response_model=VerificationPendingResponse,
+    summary="Log in with email and password",
+    description=(
+        "Validates credentials and sends a 6-digit code to the user's email. "
+        "Returns a `session_id` to pass to `/auth/verify-code`. "
+        "Raises 401 for invalid credentials, 403 if the email is unverified."
+    ),
+)
 @limiter.limit(RATE_LIMIT_AUTH_DEFAULT)
 async def login(
     request: Request, body: LoginRequest, db: AsyncSession = Depends(get_db)
 ):
+    """Validate credentials and send a login verification code."""
     result = await db.execute(select(User).where(User.email == body.email))
     user = result.scalar_one_or_none()
 
@@ -121,11 +147,22 @@ async def login(
     )
 
 
-@router.post("/verify-code", response_model=AuthResponse)
+@router.post(
+    "/verify-code",
+    response_model=AuthResponse,
+    summary="Exchange a verification code for a JWT",
+    description=(
+        "Validates the 6-digit code against the `session_id` returned by "
+        "`/signup` or `/login`. On success returns a JWT access token. "
+        "Marks the user as verified on first signup. "
+        "Raises 401 on wrong code, 429 after too many failed attempts."
+    ),
+)
 @limiter.limit(RATE_LIMIT_VERIFY)
 async def verify_code(
     request: Request, body: VerifyCodeRequest, db: AsyncSession = Depends(get_db)
 ):
+    """Validate a verification code and return a JWT access token."""
     record = await validate_verification_code(db, body.session_id, body.code)
 
     result = await db.execute(select(User).where(User.id == record.user_id))
@@ -145,11 +182,21 @@ async def verify_code(
     return _build_auth_response(user, token)
 
 
-@router.post("/resend-code", response_model=VerificationPendingResponse)
+@router.post(
+    "/resend-code",
+    response_model=VerificationPendingResponse,
+    summary="Resend a verification code",
+    description=(
+        "Invalidates the current session's code and issues a new one. "
+        "Limited to `settings.MAX_CODE_RESENDS` resends per original session. "
+        "Returns a new `session_id`."
+    ),
+)
 @limiter.limit(RATE_LIMIT_RESEND)
 async def resend_code(
     request: Request, body: ResendCodeRequest, db: AsyncSession = Depends(get_db)
 ):
+    """Invalidate the current verification session and send a fresh code."""
     result = await db.execute(
         select(VerificationCode).where(VerificationCode.id == UUID(body.session_id))
     )
@@ -193,11 +240,21 @@ async def resend_code(
     )
 
 
-@router.post("/social", response_model=AuthResponse)
+@router.post(
+    "/social",
+    response_model=AuthResponse,
+    summary="Sign in with Google or Apple",
+    description=(
+        "Verifies a provider ID token (Google or Apple), then fetches or "
+        "creates the user account. New accounts have default categories seeded. "
+        "Returns a JWT on success."
+    ),
+)
 @limiter.limit(RATE_LIMIT_AUTH_DEFAULT)
 async def social_auth(
     request: Request, body: SocialAuthRequest, db: AsyncSession = Depends(get_db)
 ):
+    """Authenticate via Google or Apple and return a JWT access token."""
     if body.provider == "google":
         info = await verify_google_id_token(body.id_token)
     elif body.provider == "apple":
@@ -222,8 +279,14 @@ async def social_auth(
     return _build_auth_response(user, token)
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get(
+    "/me",
+    response_model=UserResponse,
+    summary="Get the current user's profile",
+    description="Returns the authenticated user's id, email, name, and avatar.",
+)
 async def me(current_user: User = Depends(get_current_user)):
+    """Return the current authenticated user's profile."""
     return UserResponse(
         id=str(current_user.id),
         email=current_user.email,
@@ -232,12 +295,22 @@ async def me(current_user: User = Depends(get_current_user)):
     )
 
 
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Invalidate the current JWT",
+    description=(
+        "Adds the current token's `jti` to the revocation list so it cannot "
+        "be reused. Responds 204 No Content regardless of whether the token "
+        "was already revoked."
+    ),
+)
 async def logout(
     request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """Log out by revoking the current JWT."""
     token = request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
     if token:
         try:
