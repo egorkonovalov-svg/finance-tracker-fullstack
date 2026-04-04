@@ -1,3 +1,4 @@
+import asyncio
 import os
 import uuid
 import pytest
@@ -21,21 +22,25 @@ TestSessionLocal = async_sessionmaker(test_engine, class_=AsyncSession, expire_o
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def create_tables():
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+def create_tables():
+    async def _setup():
+        async with test_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+    async def _teardown():
+        async with test_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+
+    asyncio.run(_setup())
     yield
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+    asyncio.run(_teardown())
 
 
 @pytest.fixture
 async def db() -> AsyncSession:
     async with TestSessionLocal() as session:
-        async with session.begin():
-            nested = await session.begin_nested()
-            yield session
-            await nested.rollback()
+        yield session
+        await session.rollback()
 
 
 @pytest.fixture

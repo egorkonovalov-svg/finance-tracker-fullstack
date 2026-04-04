@@ -25,7 +25,6 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = ""
     VERIFICATION_CODE_EXPIRE_MINUTES: int = 10
     IS_DROP_TABLES: bool = False
-    DEV_ADMIN_KEY: str = ""
 
     MAX_CODE_RESENDS: int = 3
     MAX_VERIFICATION_ATTEMPTS: int = 5

@@ -174,11 +174,11 @@ async def _fetch_apple_public_keys() -> dict:
 
 
 def _find_matching_key(keys_data: dict, kid: str) -> dict:
-    """Find the public key matching the given key ID."""
+    """Find the Apple public key matching the given key ID."""
     for key_data in keys_data.get("keys", []):
         if key_data.get("kid") == kid:
             return key_data
-    raise AuthenticationError("ID token signed with unknown key")
+    raise AuthenticationError("Apple ID token signed with unknown key")
 
 
 def _validate_apple_jwt(id_token: str, public_key) -> dict:
@@ -484,7 +484,15 @@ async def verify_google_id_token(id_token: str) -> dict:
         raise AuthenticationError("Google ID token missing key ID")
 
     keys_data = await _fetch_google_public_keys()
-    matching_key = _find_matching_key(keys_data, kid)
+    matching_key = None
+    for key_data in keys_data.get("keys", []):
+        if key_data.get("kid") == kid:
+            matching_key = key_data
+            break
+
+    if not matching_key:
+        raise AuthenticationError("Google ID token signed with unknown key")
+
     public_key = jwk.construct(matching_key)
 
     try:
