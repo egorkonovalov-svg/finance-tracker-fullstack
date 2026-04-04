@@ -24,15 +24,15 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    categories: Mapped[list["Category"]] = relationship(
+    categories: Mapped[list["Category"]] = relationship(  # noqa: F821
         back_populates="user", cascade="all, delete-orphan"
-    )  # noqa: F821
-    transactions: Mapped[list["Transaction"]] = relationship(
+    )
+    transactions: Mapped[list["Transaction"]] = relationship(  # noqa: F821
         back_populates="user", cascade="all, delete-orphan"
-    )  # noqa: F821
-    budgets: Mapped[list["Budget"]] = relationship(
+    )
+    budgets: Mapped[list["Budget"]] = relationship(  # noqa: F821
         back_populates="user", cascade="all, delete-orphan"
-    )  # noqa: F821
-    goals: Mapped[list["Goal"]] = relationship(
+    )
+    goals: Mapped[list["Goal"]] = relationship(  # noqa: F821
         back_populates="user", cascade="all, delete-orphan"
-    )  # noqa: F821
+    )
