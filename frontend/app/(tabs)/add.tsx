@@ -35,7 +35,7 @@ export default function AddTransactionScreen() {
 
   const [type, setType] = useState<TransactionType>('expense');
   const [amount, setAmount] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date());
   const [recurring, setRecurring] = useState(false);
@@ -56,7 +56,7 @@ export default function AddTransactionScreen() {
       Alert.alert(t('errors.invalidAmount'), t('errors.enterValidAmount'));
       return;
     }
-    if (!selectedCategoryId) {
+    if (!selectedCategory) {
       Alert.alert(t('errors.noCategory'), t('errors.selectCategory'));
       return;
     }
@@ -71,7 +71,7 @@ export default function AddTransactionScreen() {
         type,
         amount: parseFloat(amount) / rate,
         currency,
-        category_id: selectedCategoryId,
+        category: selectedCategory,
         note: note.trim() || undefined,
         date: date.toISOString(),
         recurring,
@@ -79,7 +79,7 @@ export default function AddTransactionScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // Reset form
       setAmount('');
-      setSelectedCategoryId('');
+      setSelectedCategory('');
       setNote('');
       setDate(new Date());
       setRecurring(false);
@@ -167,8 +167,8 @@ export default function AddTransactionScreen() {
               <CategoryChip
                 key={cat.id}
                 category={cat}
-                selected={selectedCategoryId === cat.id}
-                onPress={() => setSelectedCategoryId(cat.id)}
+                selected={selectedCategory === cat.name}
+                onPress={() => setSelectedCategory(cat.name)}
               />
             ))}
           </ScrollView>

@@ -67,21 +67,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
-/**
- * Access the active theme configuration.
- *
- * Must be called inside a {@link ThemeProvider}.
- *
- * @returns `{ mode, isDark, colors, glass, setMode, toggleTheme }` — the
- *   current theme mode, resolved color palette, glass-morphism tokens, and
- *   methods to change the theme.
- * @throws {Error} If called outside a `ThemeProvider`.
- *
- * @example
- * ```tsx
- * const { colors, isDark } = useTheme();
- * ```
- */
 export function useTheme(): ThemeContextValue {
   const ctx = useContext(ThemeContext);
   if (!ctx) throw new Error('useTheme must be used within ThemeProvider');

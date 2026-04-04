@@ -1,19 +1,8 @@
 import { useTheme } from '@/context/ThemeContext';
 
 /**
- * Returns a theme-aware color value for a given color name.
- *
- * Priority: explicit `props.light` / `props.dark` override →
- * `colors[colorName]` from the active theme → `'#000'` fallback.
- *
- * @param props - Optional per-theme color overrides.
- * @param colorName - Key in the theme's `colors` object (e.g. `'text'`, `'background'`).
- * @returns Hex color string appropriate for the current light/dark mode.
- *
- * @example
- * ```tsx
- * const bg = useThemeColor({ light: '#fff', dark: '#111' }, 'background');
- * ```
+ * Returns a theme-aware color value.
+ * Prefers explicit overrides from `props`, then falls back to `colors[colorName]`.
  */
 export function useThemeColor(
   props: { light?: string; dark?: string },

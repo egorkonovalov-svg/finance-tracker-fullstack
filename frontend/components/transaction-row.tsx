@@ -23,7 +23,7 @@ export function TransactionRow({ transaction, index = 0 }: Props) {
   const router = useRouter();
   const dateLocale = localeToBCP47(locale);
 
-  const cat = categories.find((c) => c.id === transaction.category_id);
+  const cat = categories.find((c) => c.name === transaction.category);
   const isIncome = transaction.type === 'income';
   const amountColor = isIncome ? colors.income : colors.expense;
   const sign = isIncome ? '+' : '-';

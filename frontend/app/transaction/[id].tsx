@@ -7,26 +7,27 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 
 import { useTheme } from '@/context/ThemeContext';
 import { useApp } from '@/context/AppContext';
 import { useTranslation, localeToBCP47 } from '@/hooks/useTranslation';
 import { GlassCard } from '@/components/ui/glass-card';
-import { TransactionForm } from '@/components/TransactionForm';
+import { CategoryChip } from '@/components/category-chip';
 import { FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/theme';
-import type { ThemeColors } from '@/constants/theme';
 import { useCurrency } from '@/hooks/useCurrency';
 import type { TransactionType } from '@/types';
 
 export default function TransactionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { transactions, categories, updateTransaction, removeTransaction, locale } = useApp();
   const { t } = useTranslation();
   const { convertAndFormat, convert, rate } = useCurrency();
@@ -37,15 +38,16 @@ export default function TransactionDetailScreen() {
   const [editing, setEditing] = useState(false);
   const [type, setType] = useState<TransactionType>(tx?.type ?? 'expense');
   const [amount, setAmount] = useState(tx ? convert(tx.amount).toFixed(2) : '');
-  const [selectedCategoryId, setSelectedCategoryId] = useState(tx?.category_id ?? '');
+  const [selectedCategory, setSelectedCategory] = useState(tx?.category ?? '');
   const [note, setNote] = useState(tx?.note ?? '');
   const [date, setDate] = useState(tx ? new Date(tx.date) : new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     if (tx) {
       setType(tx.type);
       setAmount(convert(tx.amount).toFixed(2));
-      setSelectedCategoryId(tx.category_id);
+      setSelectedCategory(tx.category);
       setNote(tx.note ?? '');
       setDate(new Date(tx.date));
     }
@@ -60,7 +62,8 @@ export default function TransactionDetailScreen() {
   }
 
   const accentColor = type === 'income' ? colors.income : colors.expense;
-  const cat = categories.find((c) => c.id === tx.category_id);
+  const filteredCategories = categories.filter((c) => c.type === type || c.type === 'both');
+  const cat = categories.find((c) => c.name === tx.category);
 
   const handleSave = async () => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -71,7 +74,7 @@ export default function TransactionDetailScreen() {
       await updateTransaction(tx.id, {
         type,
         amount: parseFloat(amount) / rate,
-        category_id: selectedCategoryId,
+        category: selectedCategory,
         note: note.trim() || undefined,
         date: date.toISOString(),
       });
@@ -145,26 +148,87 @@ export default function TransactionDetailScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={{ paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
-        <TransactionForm
-          type={type}
-          setType={setType}
-          amount={amount}
-          setAmount={setAmount}
-          selectedCategoryId={selectedCategoryId}
-          setSelectedCategoryId={setSelectedCategoryId}
-          note={note}
-          setNote={setNote}
-          date={date}
-          setDate={setDate}
-          onSave={handleSave}
-          onCancel={() => setEditing(false)}
-        />
+        <Animated.View entering={FadeInUp.duration(300)} style={styles.content}>
+          {/* Type toggle */}
+          <GlassCard padding={6} radius={16}>
+            <View style={styles.toggleRow}>
+              <Pressable style={[styles.toggleBtn, type === 'expense' && { backgroundColor: Palette.red + '20' }]} onPress={() => setType('expense')}>
+                <Text style={[styles.toggleLabel, { color: type === 'expense' ? Palette.red : colors.textMuted }]}>{t('add.expense')}</Text>
+              </Pressable>
+              <Pressable style={[styles.toggleBtn, type === 'income' && { backgroundColor: Palette.emerald + '20' }]} onPress={() => setType('income')}>
+                <Text style={[styles.toggleLabel, { color: type === 'income' ? Palette.emerald : colors.textMuted }]}>{t('add.income')}</Text>
+              </Pressable>
+            </View>
+          </GlassCard>
+
+          {/* Amount */}
+          <GlassCard padding={20} radius={16} style={{ marginTop: Spacing.lg }}>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('detail.amount')}</Text>
+            <TextInput
+              style={[styles.editAmount, { color: colors.text, borderBottomColor: accentColor }]}
+              value={amount}
+              onChangeText={(text) => setAmount(text.replace(/[^0-9.]/g, ''))}
+              keyboardType="decimal-pad"
+              accessibilityLabel={t('a11y.editAmount')}
+            />
+          </GlassCard>
+
+          {/* Category */}
+          <Text style={[styles.fieldLabel, { color: colors.text, marginTop: Spacing.lg, marginBottom: Spacing.sm }]}>{t('detail.category')}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {filteredCategories.map((cat) => (
+              <CategoryChip key={cat.id} category={cat} selected={selectedCategory === cat.name} onPress={() => setSelectedCategory(cat.name)} />
+            ))}
+          </ScrollView>
+
+          {/* Date */}
+          <GlassCard padding={14} radius={14} style={{ marginTop: Spacing.lg }}>
+            <Pressable style={styles.dateRow} onPress={() => setShowDatePicker(true)}>
+              <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+              <Text style={[styles.dateText, { color: colors.text }]}>
+                {date.toLocaleDateString(dateLocale, { month: 'short', day: 'numeric', year: 'numeric' })}
+              </Text>
+            </Pressable>
+          </GlassCard>
+          <DateTimePickerModal
+            isVisible={showDatePicker}
+            mode="date"
+            date={date}
+            onConfirm={(d) => { setDate(d); setShowDatePicker(false); }}
+            onCancel={() => setShowDatePicker(false)}
+            isDarkModeEnabled={isDark}
+          />
+
+          {/* Note */}
+          <GlassCard padding={14} radius={14} style={{ marginTop: Spacing.lg }}>
+            <TextInput
+              style={[styles.noteInput, { color: colors.text }]}
+              value={note}
+              onChangeText={setNote}
+              placeholder={t('detail.notePlaceholder')}
+              placeholderTextColor={colors.placeholder}
+              multiline
+              accessibilityLabel={t('a11y.editNote')}
+            />
+          </GlassCard>
+
+          {/* Save / Cancel */}
+          <View style={styles.actions}>
+            <Pressable style={[styles.actionBtn, { backgroundColor: colors.primary }]} onPress={handleSave}>
+              <Ionicons name="checkmark" size={18} color="#FFF" />
+              <Text style={styles.actionLabel}>{t('common.save')}</Text>
+            </Pressable>
+            <Pressable style={[styles.actionBtn, { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.inputBorder }]} onPress={() => setEditing(false)}>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>{t('common.cancel')}</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-function DetailRow({ icon, label, value, iconColor, colors }: { icon: string; label: string; value: string; iconColor: string; colors: ThemeColors }) {
+function DetailRow({ icon, label, value, iconColor, colors }: { icon: string; label: string; value: string; iconColor: string; colors: any }) {
   return (
     <View style={styles.detailRow}>
       <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color={iconColor} />
@@ -180,6 +244,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: Spacing.xl },
+  // View mode
   typeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -233,6 +298,44 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.headingMedium,
     fontSize: FontSize.md,
     color: '#FFF',
+  },
+  // Edit mode
+  toggleRow: { flexDirection: 'row' },
+  toggleBtn: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  toggleLabel: {
+    fontFamily: FontFamily.bodySemiBold,
+    fontSize: FontSize.md,
+  },
+  fieldLabel: {
+    fontFamily: FontFamily.body,
+    fontSize: FontSize.sm,
+  },
+  editAmount: {
+    fontFamily: FontFamily.heading,
+    fontSize: FontSize['3xl'],
+    borderBottomWidth: 2,
+    paddingBottom: 4,
+    marginTop: Spacing.sm,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  dateText: {
+    fontFamily: FontFamily.bodyMedium,
+    fontSize: FontSize.md,
+  },
+  noteInput: {
+    fontFamily: FontFamily.body,
+    fontSize: FontSize.md,
+    minHeight: 50,
+    textAlignVertical: 'top',
   },
   emptyText: {
     fontFamily: FontFamily.body,
