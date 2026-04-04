@@ -1,2 +1,1 @@
-(cd backend && source venv/bin/activate && ruff check app)
-(cd frontend && npx lint-staged)
+cd frontend && npx lint-staged

@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_current_user, get_db
-from app.exceptions import AuthenticationError, AuthorizationError, EmailDeliveryError
+from app.exceptions import EmailDeliveryError
 from app.models.user import User
 from app.models.verification_code import VerificationCode
 from app.schemas.auth import (
@@ -120,13 +120,20 @@ async def login(
     user = result.scalar_one_or_none()
 
     if not user or not user.password_hash:
-        raise AuthenticationError("Invalid credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+        )
 
     if not user.is_verified:
-        raise AuthorizationError("Email not verified. Please sign up again.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email not verified. Please sign up again.",
+        )
 
     if not verify_password(body.password, user.password_hash):
-        raise AuthenticationError("Invalid credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+        )
 
     session_id, code = await create_verification(db, user.id, "login")
     try:
