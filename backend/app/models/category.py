@@ -22,3 +22,6 @@ class Category(Base):
     type: Mapped[str] = mapped_column(String(10), nullable=False)
 
     user: Mapped["User"] = relationship(back_populates="categories")  # noqa: F821
+    transactions: Mapped[list["Transaction"]] = relationship(
+        back_populates="category_rel"
+    )  # noqa: F821

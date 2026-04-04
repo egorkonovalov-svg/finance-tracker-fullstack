@@ -1,4 +1,5 @@
 import { api, USE_MOCK } from './api-client';
+import { mockDelay } from '../utils/mock';
 import type {
   AuthResponse,
   LoginPayload,
@@ -20,14 +21,11 @@ const MOCK_USER: User = {
 
 const MOCK_TOKEN = 'mock-jwt-token-fintrack';
 
-function delay(ms = 400) {
-  return new Promise((r) => setTimeout(r, ms));
-}
 
 const MOCK_SESSION_ID = 'mock-session-id-12345';
 
 async function mockLogin(payload: LoginPayload): Promise<SessionResponse> {
-  await delay();
+  await mockDelay(400);
   if (!payload.email || !payload.password) {
     throw new Error('Email and password are required');
   }
@@ -38,7 +36,7 @@ async function mockLogin(payload: LoginPayload): Promise<SessionResponse> {
 }
 
 async function mockSignup(payload: SignupPayload): Promise<SessionResponse> {
-  await delay(500);
+  await mockDelay(500);
   if (!payload.email || !payload.password) {
     throw new Error('Email and password are required');
   }
@@ -49,27 +47,27 @@ async function mockSignup(payload: SignupPayload): Promise<SessionResponse> {
 }
 
 async function mockVerifyCode(_payload: VerifyCodePayload): Promise<AuthResponse> {
-  await delay(300);
+  await mockDelay(300);
   return { user: MOCK_USER, access_token: MOCK_TOKEN };
 }
 
 async function mockResendCode(_payload: ResendCodePayload): Promise<SessionResponse> {
-  await delay(300);
+  await mockDelay(300);
   return { session_id: 'mock-new-session-id', message: 'New verification code sent to your email' };
 }
 
 async function mockSocialAuth(_payload: SocialAuthPayload): Promise<AuthResponse> {
-  await delay(300);
+  await mockDelay(300);
   return { user: MOCK_USER, access_token: MOCK_TOKEN };
 }
 
 async function mockMe(): Promise<User> {
-  await delay(200);
+  await mockDelay(200);
   return MOCK_USER;
 }
 
 async function mockLogout(): Promise<void> {
-  await delay(100);
+  await mockDelay(100);
 }
 
 // ─── Response normalisation ──────────────────────────────────────────────────

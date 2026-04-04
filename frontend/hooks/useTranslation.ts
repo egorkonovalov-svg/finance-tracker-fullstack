@@ -13,8 +13,19 @@ function interpolate(str: string, params?: Record<string, string | number>): str
 }
 
 /**
- * Translation hook. Reads locale from AppContext and returns t(key) that looks up
- * the string from locales/[locale].json, with optional {{param}} interpolation.
+ * Translation hook. Reads locale from AppContext and returns `t(key)` that looks
+ * up the string from `locales/[locale].json`, with optional `{{param}}`
+ * interpolation. Falls back to the English dictionary, then the raw key.
+ *
+ * @returns `{ t, locale, setLocale }` — translation function, current locale,
+ *   and locale setter.
+ *
+ * @example
+ * ```tsx
+ * const { t } = useTranslation();
+ * t('errors.generic');                              // "Something went wrong"
+ * t('errors.passwordMinLength', { count: 8 });     // "Password must be at least 8 characters"
+ * ```
  */
 export function useTranslation() {
   const { locale, setLocale } = useApp();

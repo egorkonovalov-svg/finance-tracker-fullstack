@@ -1,19 +1,41 @@
+import asyncio
 import logging
 import uvicorn
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.database import engine, Base
+from app.exceptions import (
+    AuthenticationError,
+    AuthorizationError,
+    ConflictError,
+    EmailDeliveryError,
+    NotFoundError,
+    RateLimitError,
+)
 from app.routers import auth, budgets, categories, goals, transactions
 
 logger = logging.getLogger(__name__)
 
 SHOW_DOCS_ENVIRONMENT = ("local",)
+
+
+async def _run_periodic_cleanup():
+    from app.services.auth import cleanup_expired_revoked_tokens
+
+    while True:
+        await asyncio.sleep(3600)  # 1 hour
+        try:
+            await cleanup_expired_revoked_tokens()
+            logger.debug("Expired revoked tokens cleaned up")
+        except Exception:
+            logger.exception("Revoked token cleanup failed")
 
 
 @asynccontextmanager
@@ -25,7 +47,10 @@ async def lifespan(app: FastAPI):
             if settings.IS_DROP_TABLES:
                 await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
+
+    cleanup_task = asyncio.create_task(_run_periodic_cleanup())
     yield
+    cleanup_task.cancel()
 
 
 app_configs: dict = {"title": "FinTrack API", "lifespan": lifespan}
@@ -36,6 +61,37 @@ app = FastAPI(**app_configs)
 
 app.state.limiter = auth.limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.exception_handler(AuthenticationError)
+async def authentication_error_handler(request: Request, exc: AuthenticationError):
+    return JSONResponse(status_code=401, content={"detail": exc.detail})
+
+
+@app.exception_handler(AuthorizationError)
+async def authorization_error_handler(request: Request, exc: AuthorizationError):
+    return JSONResponse(status_code=403, content={"detail": exc.detail})
+
+
+@app.exception_handler(NotFoundError)
+async def not_found_error_handler(request: Request, exc: NotFoundError):
+    return JSONResponse(status_code=404, content={"detail": exc.detail})
+
+
+@app.exception_handler(ConflictError)
+async def conflict_error_handler(request: Request, exc: ConflictError):
+    return JSONResponse(status_code=409, content={"detail": exc.detail})
+
+
+@app.exception_handler(RateLimitError)
+async def rate_limit_error_handler(request: Request, exc: RateLimitError):
+    return JSONResponse(status_code=429, content={"detail": exc.detail})
+
+
+@app.exception_handler(EmailDeliveryError)
+async def email_delivery_error_handler(request: Request, exc: EmailDeliveryError):
+    return JSONResponse(status_code=500, content={"detail": exc.detail})
+
 
 app.add_middleware(
     CORSMiddleware,

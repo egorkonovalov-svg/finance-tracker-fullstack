@@ -1,4 +1,5 @@
 import { api, USE_MOCK } from './api-client';
+import { mockDelay } from '../utils/mock';
 import { MOCK_CATEGORIES } from './mock-data';
 import type { Category, CreateCategoryPayload, UpdateCategoryPayload } from '@/types';
 
@@ -7,24 +8,21 @@ import type { Category, CreateCategoryPayload, UpdateCategoryPayload } from '@/t
 let mockStore = [...MOCK_CATEGORIES];
 let nextId = mockStore.length + 1;
 
-function delay(ms = 200) {
-  return new Promise((r) => setTimeout(r, ms));
-}
 
 async function mockGetCategories(): Promise<Category[]> {
-  await delay();
+  await mockDelay(200);
   return [...mockStore];
 }
 
 async function mockCreateCategory(data: CreateCategoryPayload): Promise<Category> {
-  await delay();
+  await mockDelay(200);
   const cat: Category = { ...data, id: `cat-${++nextId}` };
   mockStore = [...mockStore, cat];
   return cat;
 }
 
 async function mockUpdateCategory(id: string, data: UpdateCategoryPayload): Promise<Category> {
-  await delay();
+  await mockDelay(200);
   const idx = mockStore.findIndex((c) => c.id === id);
   if (idx === -1) throw new Error(`Category ${id} not found`);
   mockStore[idx] = { ...mockStore[idx], ...data };
@@ -32,7 +30,7 @@ async function mockUpdateCategory(id: string, data: UpdateCategoryPayload): Prom
 }
 
 async function mockDeleteCategory(id: string): Promise<void> {
-  await delay(100);
+  await mockDelay(100);
   mockStore = mockStore.filter((c) => c.id !== id);
 }
 

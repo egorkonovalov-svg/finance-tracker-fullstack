@@ -1,7 +1,32 @@
-# FinTrack Backend API
+# FinTrack
+
+A full-stack personal finance tracking application with a React Native (Expo) frontend and FastAPI backend.
+
+## Architecture Overview
+
+This is a monorepo containing both frontend and backend services:
+
+- **Frontend**: Expo / React Native web app (port 8081)
+- **Backend**: FastAPI / Python 3.12 API (port 8000)
+- **Database**: PostgreSQL (port 5432)
+
+### Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | React Native, Expo, TypeScript |
+| Backend | FastAPI, SQLAlchemy 2.0, Pydantic v2 |
+| Database | PostgreSQL (asyncpg) |
+| Auth | JWT with email 2FA |
+| Deployment | Docker, Vercel (frontend and backend), Supabase (DB) |
+
+For detailed architecture documentation, see [CLAUDE.md](./CLAUDE.md).
+
 ## Environment Variables
 
-Create a `.env` file in the project root with the following variables:
+Create a `.env` file in the project root. See [.env.example](./.env.example) for the full template.
+
+Key variables:
 
 ```env
 # Database
@@ -12,16 +37,15 @@ JWT_SECRET=your-secret-key-change-in-production
 JWT_ALGORITHM=HS256
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
 
-# Environment
-ENVIRONMENT=local  # Options: local, staging, production
+# Frontend
+EXPO_PUBLIC_API_URL=http://localhost:8000/api/v1
+EXPO_PUBLIC_USE_MOCK=false
 
-# SMTP Configuration (for email verification codes)
+# SMTP (for email verification codes)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
-SMTP_FROM_EMAIL=your-email@gmail.com
-VERIFICATION_CODE_EXPIRE_MINUTES=10
 ```
 
 ## Installation & Setup
@@ -138,3 +162,118 @@ Ensure [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https:
 - `npm run web` - Start web version
 - `npm run lint` - Run ESLint
 - `npm run test` - Run unit tests (Jest)
+
+## Contributing
+
+### Code Style
+
+**Frontend (TypeScript/React)**
+```bash
+cd frontend
+npm run lint          # ESLint via expo lint
+npm run lint --fix    # Auto-fix issues
+```
+
+**Backend (Python)**
+```bash
+cd backend
+source venv/bin/activate
+ruff check --fix app  # Lint and auto-fix
+ruff format app       # Format code
+```
+
+### Testing
+
+**Frontend**
+```bash
+cd frontend
+npm test              # Run Jest tests
+npm test -- --testPathPattern=<file>  # Single test file
+```
+
+**Backend**
+```bash
+cd backend
+source venv/bin/activate
+pytest               # Run pytest suite
+pytest -v           # Verbose output
+```
+
+### Commit Conventions
+
+We use conventional commit messages:
+
+- `feat:` — New feature
+- `fix:` — Bug fix
+- `docs:` — Documentation changes
+- `style:` — Code style changes (formatting, no logic change)
+- `refactor:` — Code refactoring
+- `test:` — Adding or updating tests
+- `chore:` — Build process or auxiliary tool changes
+
+Example: `feat: add transaction filtering by date range`
+
+### Pre-commit Checklist
+
+1. Run linting: `npm run lint` (frontend), `ruff check app` (backend)
+2. Run tests: `npm test` (frontend), `pytest` (backend)
+3. Update documentation if needed
+4. Ensure commit message follows conventions
+
+## Deployment
+
+### Docker (Full Stack)
+
+Deploy the entire stack with Docker Compose:
+
+```bash
+docker compose up --build           # All services
+docker compose up -d --build        # Detached mode
+docker compose down -v              # Stop and remove volumes
+```
+
+Services:
+- Frontend: http://localhost:8081
+- Backend API: http://localhost:8000
+- PostgreSQL: localhost:5432
+
+### Vercel (Frontend + Serverless API)
+
+The frontend is configured for Vercel deployment via `vercel.json`:
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel --prod
+```
+
+Configuration:
+- Static frontend built with `npx expo export --platform web`
+- Backend runs as serverless functions via `api/index.py`
+- API routes rewritten to `/api/v1/*`
+
+### Supabase (Database)
+
+For production PostgreSQL hosting:
+
+1. Create a project at [Supabase](https://supabase.com)
+2. Get connection string from Settings → Database
+3. Set `DATABASE_URL` in Vercel environment variables:
+   ```
+   postgresql+asyncpg://postgres.[project]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
+   ```
+
+### Environment-Specific Notes
+
+**Development**
+- Use `EXPO_PUBLIC_USE_MOCK=true` for frontend-only development
+- PostgreSQL runs in Docker container
+- Hot reload enabled for both frontend and backend
+
+**Production**
+- Set `JWT_SECRET` to a cryptographically random string
+- Configure SMTP credentials for email verification
+- Use `CORS_ORIGINS` to restrict allowed origins
+- Database tables auto-created on first startup (no migrations needed)

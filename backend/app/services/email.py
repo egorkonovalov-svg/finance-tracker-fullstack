@@ -4,6 +4,7 @@ import aiosmtplib
 from email.message import EmailMessage
 
 from app.config import settings
+from app.exceptions import EmailDeliveryError
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,14 @@ _PLACEHOLDER_VALUES = {"", "", ""}
 
 
 def _smtp_configured() -> bool:
+    """Return True if SMTP credentials are set to non-placeholder values.
+
+    Checks both ``settings.SMTP_USER`` and ``settings.SMTP_PASSWORD`` against
+    the known placeholder set. Used as a guard before attempting to send email.
+
+    Returns:
+        ``True`` when both values are non-empty and non-placeholder.
+    """
     return (
         settings.SMTP_USER not in _PLACEHOLDER_VALUES
         and settings.SMTP_PASSWORD not in _PLACEHOLDER_VALUES
@@ -19,6 +28,23 @@ def _smtp_configured() -> bool:
 
 
 async def send_verification_email(to: str, code: str) -> None:
+    """Send a verification code email via SMTP (aiosmtplib).
+
+    Behaviour varies by environment:
+    - ``local`` + SMTP not configured: logs a warning and returns silently
+      (dev workflow relies on reading the code from server logs).
+    - Non-local + SMTP not configured: logs an error and returns silently.
+    - SMTP configured: sends the email over STARTTLS with a 10-second timeout.
+
+    Args:
+        to: Recipient email address.
+        code: The 6-digit verification code to include in the body.
+
+    Raises:
+        EmailDeliveryError: If ``aiosmtplib`` raises ``SMTPException`` or
+            ``OSError`` during delivery. The caller should catch this and decide
+            whether to surface the error to the user.
+    """
     # In local dev, always print the code to the terminal so you can log in without SMTP
     if settings.ENVIRONMENT == "local":
         if not _smtp_configured():
@@ -56,12 +82,7 @@ async def send_verification_email(to: str, code: str) -> None:
             start_tls=True,
             timeout=10,
         )
-    except Exception as exc:
-        # Avoid noisy tracebacks when SMTP is unreachable or misconfigured.
-        # Log a concise error instead so local development logs stay readable.
-        logger.error(
-            "Failed to send verification email to %s via SMTP (%s: %s)",
-            to,
-            type(exc).__name__,
-            str(exc),
-        )
+    except (aiosmtplib.SMTPException, OSError) as exc:
+        raise EmailDeliveryError(
+            f"Failed to send verification email to {to}: {type(exc).__name__}: {exc}"
+        ) from exc
