@@ -95,9 +95,13 @@ async def _validate_category(db: AsyncSession, category_id: str, user_id: UUID) 
     Raises:
         NotFoundError: If no category with the given id and user_id is found.
     """
+    try:
+        cat_uuid = UUID(category_id)
+    except ValueError:
+        raise NotFoundError("Category not found")
     result = await db.execute(
         select(Category).where(
-            Category.id == category_id,
+            Category.id == cat_uuid,
             Category.user_id == user_id,
         )
     )
@@ -148,7 +152,7 @@ async def list_transactions(
     date_to: datetime | None = None,
     amount_min: float | None = None,
     amount_max: float | None = None,
-    search: str | None = Query(default=None, max_length=200),
+    search: str | None = Query(default=None, max_length=200),  # increased from 100 to support longer category+note combos
     page: int = Query(default=1, ge=1, le=10000),
     page_size: int = Query(default=20, ge=1, le=100),
     current_user: User = Depends(get_current_user),

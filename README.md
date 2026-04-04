@@ -46,6 +46,8 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
+SMTP_FROM_EMAIL=your-email@gmail.com
+VERIFICATION_CODE_EXPIRE_MINUTES=10
 ```
 
 ## Installation & Setup

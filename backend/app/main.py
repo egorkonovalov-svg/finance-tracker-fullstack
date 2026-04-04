@@ -90,6 +90,9 @@ async def rate_limit_error_handler(request: Request, exc: RateLimitError):
 
 @app.exception_handler(EmailDeliveryError)
 async def email_delivery_error_handler(request: Request, exc: EmailDeliveryError):
+    # Call sites in auth.py swallow this with logger.warning, so this handler is a
+    # last-resort safety net for any future code path that forgets to catch it.
+    # 500 is correct: the request was valid but the server could not deliver the email.
     return JSONResponse(status_code=500, content={"detail": exc.detail})
 
 
