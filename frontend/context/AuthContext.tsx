@@ -1,6 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
 import { setAuthToken } from '@/services/api-client';
 import { authService } from '@/services/auth';
 import type {
@@ -37,23 +36,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
 }
 
-const TOKEN_KEY = 'fintrack_token';
-
-// expo-secure-store has no web support; fall back to localStorage on web
-const storage = {
-  getItem: (key: string) =>
-    Platform.OS === 'web'
-      ? Promise.resolve(localStorage.getItem(key))
-      : SecureStore.getItemAsync(key),
-  setItem: (key: string, value: string) =>
-    Platform.OS === 'web'
-      ? Promise.resolve(localStorage.setItem(key, value))
-      : SecureStore.setItemAsync(key, value),
-  deleteItem: (key: string) =>
-    Platform.OS === 'web'
-      ? Promise.resolve(localStorage.removeItem(key))
-      : SecureStore.deleteItemAsync(key),
-};
+const TOKEN_KEY = '@fintrack_token';
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -81,20 +64,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(t);
     setAuthToken(t);
     if (t) {
-      await storage.setItem(TOKEN_KEY, t);
+      await SecureStore.setItemAsync(TOKEN_KEY, t);
     } else {
-      await storage.deleteItem(TOKEN_KEY);
+      await SecureStore.deleteItemAsync(TOKEN_KEY);
     }
   }, []);
 
   useEffect(() => {
     (async () => {
       try {
-        const stored = await storage.getItem(TOKEN_KEY);
+        const stored = await SecureStore.getItemAsync(TOKEN_KEY);
         if (stored) {
           const exp = getTokenExp(stored);
           if (exp !== null && exp * 1000 < Date.now()) {
-            await storage.deleteItem(TOKEN_KEY);
+            await SecureStore.deleteItemAsync(TOKEN_KEY);
           } else {
             setAuthToken(stored);
             const me = await authService.me();
@@ -105,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (e) {
         console.error('Session restore error:', e);
-        await storage.deleteItem(TOKEN_KEY);
+        await SecureStore.deleteItemAsync(TOKEN_KEY);
         setAuthToken(null);
         setAuthError('Session expired. Please sign in again.');
       } finally {
@@ -173,22 +156,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-/**
- * Access the authentication context.
- *
- * Must be called inside an {@link AuthProvider}.
- *
- * @returns Authentication state (`user`, `token`, `isAuthenticated`, `loading`,
- *   `authError`, `pendingVerification`) and methods (`login`, `signup`,
- *   `verifyCode`, `resendCode`, `socialAuth`, `logout`, `clearAuthError`,
- *   `setPendingVerification`).
- * @throws {Error} If called outside an `AuthProvider`.
- *
- * @example
- * ```tsx
- * const { isAuthenticated, logout } = useAuth();
- * ```
- */
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');

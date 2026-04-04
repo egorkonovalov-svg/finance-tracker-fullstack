@@ -13,7 +13,7 @@ class TransactionCreate(BaseModel):
     type: TransactionType
     amount: float = Field(gt=0)
     currency: str = Field(min_length=3, max_length=3)
-    category_id: str
+    category: str
     note: str | None = None
     date: datetime
     recurring: bool = False
@@ -23,7 +23,7 @@ class TransactionUpdate(BaseModel):
     type: TransactionType | None = None
     amount: float | None = Field(default=None, gt=0)
     currency: str | None = Field(default=None, min_length=3, max_length=3)
-    category_id: str | None = None
+    category: str | None = None
     note: str | None = None
     date: datetime | None = None
     recurring: bool | None = None
@@ -34,7 +34,6 @@ class TransactionResponse(BaseModel):
     type: str
     amount: float
     currency: str
-    category_id: str
     category: str
     note: str | None = None
     date: datetime

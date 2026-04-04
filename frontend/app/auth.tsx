@@ -1,50 +1,128 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { useRouter } from 'expo-router';
 
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useEmailPasswordAuth } from '@/hooks/useEmailPasswordAuth';
-import { useSocialAuth } from '@/hooks/useSocialAuth';
-import { EmailPasswordForm } from '@/components/EmailPasswordForm';
-import { SocialAuthButtons } from '@/components/SocialAuthButtons';
+import { ApiError, USE_MOCK } from '@/services/api-client';
 import { GlassCard } from '@/components/ui/glass-card';
 import { FontFamily, FontSize, Palette, Radius, Spacing } from '@/constants/theme';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 8;
+
+function extractErrorMessage(e: unknown, fallback: string): string {
+  if (e instanceof ApiError) {
+    const body = e.body as Record<string, unknown> | null;
+    return (body?.detail as string) ?? (body?.message as string) ?? fallback;
+  }
+  if (e instanceof Error) return e.message;
+  return fallback;
+}
+
+type AuthMode = 'login' | 'signup';
 
 export default function AuthScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const { authError, clearAuthError } = useAuth();
+  const { login, signup, socialAuth, authError, clearAuthError, setPendingVerification } = useAuth();
+  const router = useRouter();
 
   React.useEffect(() => {
     clearAuthError();
   }, [clearAuthError]);
 
-  const {
-    mode, setMode,
-    name, setName,
-    email, setEmail,
-    password, setPassword,
-    showPassword, setShowPassword,
-    submitting, setSubmitting,
-    handleSubmit,
-  } = useEmailPasswordAuth();
-
-  const { handleGoogleSignIn, handleAppleSignIn } = useSocialAuth({ setSubmitting });
+  const [mode, setMode] = useState<AuthMode>('login');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const isLogin = mode === 'login';
+
+  const handleSubmit = async () => {
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail || !password) {
+      Alert.alert(t('errors.missingFields'), t('errors.enterEmailPassword'));
+      return;
+    }
+    if (!EMAIL_RE.test(trimmedEmail)) {
+      Alert.alert(t('errors.invalidEmail'), t('errors.validEmail'));
+      return;
+    }
+    if (!isLogin && password.length < MIN_PASSWORD_LENGTH) {
+      Alert.alert(t('errors.weakPassword'), t('errors.passwordMinLength', { count: MIN_PASSWORD_LENGTH }));
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = isLogin
+        ? await login({ email: trimmedEmail, password })
+        : await signup({ email: trimmedEmail, password, name: name.trim() || undefined });
+      setPendingVerification({ session_id: res.session_id, email: trimmedEmail });
+      router.push('/verify-code');
+    } catch (e: unknown) {
+      Alert.alert(t('errors.generic'), extractErrorMessage(e, t('errors.generic')));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (!(__DEV__ && USE_MOCK)) {
+      Alert.alert(t('errors.generic'), t('errors.googleSignInFailed'));
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await socialAuth({ provider: 'google', id_token: 'google-mock-token' });
+    } catch (e: unknown) {
+      Alert.alert(t('errors.generic'), extractErrorMessage(e, t('errors.googleSignInFailed')));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setSubmitting(true);
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      if (credential.identityToken) {
+        await socialAuth({ provider: 'apple', id_token: credential.identityToken });
+      }
+    } catch (e: unknown) {
+      const err = e as { code?: string };
+      if (err.code !== 'ERR_REQUEST_CANCELED') {
+        Alert.alert(t('errors.generic'), extractErrorMessage(e, t('errors.appleSignInFailed')));
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -106,19 +184,81 @@ export default function AuthScreen() {
 
         {/* ── Form ───────────────────────────────────────────────────── */}
         <Animated.View entering={FadeInUp.delay(200).duration(400)} style={styles.section}>
-          <EmailPasswordForm
-            mode={mode}
-            name={name}
-            setName={setName}
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            showPassword={showPassword}
-            setShowPassword={setShowPassword}
-            submitting={submitting}
-            onSubmit={handleSubmit}
-          />
+          <GlassCard padding={20} radius={20}>
+            {!isLogin && (
+              <View style={styles.fieldWrap}>
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('auth.name')}</Text>
+                <View style={[styles.inputRow, { borderColor: colors.inputBorder, backgroundColor: colors.inputBg }]}>
+                  <Ionicons name="person-outline" size={18} color={colors.textMuted} />
+                  <TextInput
+                    style={[styles.input, { color: colors.text }]}
+                    value={name}
+                    onChangeText={setName}
+                    placeholder={t('auth.namePlaceholder')}
+                    placeholderTextColor={colors.placeholder}
+                    autoCapitalize="words"
+                    autoComplete="name"
+                    accessibilityLabel={t('auth.name')}
+                  />
+                </View>
+              </View>
+            )}
+
+            <View style={styles.fieldWrap}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('auth.email')}</Text>
+              <View style={[styles.inputRow, { borderColor: colors.inputBorder, backgroundColor: colors.inputBg }]}>
+                <Ionicons name="mail-outline" size={18} color={colors.textMuted} />
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder={t('auth.emailPlaceholder')}
+                  placeholderTextColor={colors.placeholder}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  accessibilityLabel={t('auth.email')}
+                />
+              </View>
+            </View>
+
+            <View style={styles.fieldWrap}>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('auth.password')}</Text>
+              <View style={[styles.inputRow, { borderColor: colors.inputBorder, backgroundColor: colors.inputBg }]}>
+                <Ionicons name="lock-closed-outline" size={18} color={colors.textMuted} />
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder={t('auth.passwordPlaceholder')}
+                  placeholderTextColor={colors.placeholder}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoComplete={isLogin ? 'current-password' : 'new-password'}
+                  accessibilityLabel={t('auth.password')}
+                />
+                <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={8}>
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color={colors.textMuted}
+                  />
+                </Pressable>
+              </View>
+            </View>
+
+            <Pressable
+              style={[styles.primaryBtn, { backgroundColor: Palette.indigo, opacity: submitting ? 0.7 : 1 }]}
+              onPress={handleSubmit}
+              disabled={submitting}
+              accessibilityLabel={isLogin ? t('auth.logIn') : t('auth.signUp')}
+              accessibilityRole="button"
+            >
+              <Text style={styles.primaryBtnText}>
+                {submitting ? t('auth.pleaseWait') : isLogin ? t('auth.logIn') : t('auth.signUp')}
+              </Text>
+            </Pressable>
+          </GlassCard>
         </Animated.View>
 
         {/* ── Divider ────────────────────────────────────────────────── */}
@@ -130,11 +270,31 @@ export default function AuthScreen() {
 
         {/* ── Social Buttons ─────────────────────────────────────────── */}
         <Animated.View entering={FadeInUp.delay(400).duration(400)} style={styles.section}>
-          <SocialAuthButtons
-            onGoogleSignIn={handleGoogleSignIn}
-            onAppleSignIn={handleAppleSignIn}
-            disabled={submitting}
-          />
+          <View style={styles.socialRow}>
+            <Pressable
+              style={[styles.socialBtn, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}
+              onPress={handleGoogleSignIn}
+              disabled={submitting}
+              accessibilityLabel={`Sign in with ${t('auth.google')}`}
+              accessibilityRole="button"
+            >
+              <Ionicons name="logo-google" size={20} color="#DB4437" />
+              <Text style={[styles.socialBtnText, { color: colors.text }]}>{t('auth.google')}</Text>
+            </Pressable>
+
+            {Platform.OS === 'ios' && (
+              <Pressable
+                style={[styles.socialBtn, { backgroundColor: '#000000', borderColor: '#000000' }]}
+                onPress={handleAppleSignIn}
+                disabled={submitting}
+                accessibilityLabel={`Sign in with ${t('auth.apple')}`}
+                accessibilityRole="button"
+              >
+                <Ionicons name="logo-apple" size={20} color="#FFFFFF" />
+                <Text style={[styles.socialBtnText, { color: '#FFFFFF' }]}>{t('auth.apple')}</Text>
+              </Pressable>
+            )}
+          </View>
         </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -183,6 +343,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     flex: 1,
   },
+  // Toggle
   toggleRow: {
     flexDirection: 'row',
   },
@@ -196,6 +357,49 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.bodySemiBold,
     fontSize: FontSize.md,
   },
+  // Form fields
+  fieldWrap: {
+    marginBottom: Spacing.lg,
+  },
+  fieldLabel: {
+    fontFamily: FontFamily.body,
+    fontSize: FontSize.sm,
+    marginBottom: Spacing.sm,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    paddingHorizontal: 14,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
+    gap: 10,
+  },
+  input: {
+    flex: 1,
+    fontFamily: FontFamily.body,
+    fontSize: FontSize.md,
+    padding: 0,
+  },
+  // Primary button
+  primaryBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: Radius.lg,
+    marginTop: Spacing.sm,
+    shadowColor: Palette.indigo,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  primaryBtnText: {
+    fontFamily: FontFamily.headingMedium,
+    fontSize: FontSize.lg,
+    color: '#FFFFFF',
+  },
+  // Divider
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -210,5 +414,24 @@ const styles = StyleSheet.create({
   dividerText: {
     fontFamily: FontFamily.body,
     fontSize: FontSize.sm,
+  },
+  // Social buttons
+  socialRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  socialBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    gap: 8,
+  },
+  socialBtnText: {
+    fontFamily: FontFamily.bodyMedium,
+    fontSize: FontSize.md,
   },
 });

@@ -5,7 +5,6 @@ import { categoriesService } from '@/services/categories';
 import { budgetsService } from '@/services/budgets';
 import { goalsService } from '@/services/goals';
 import { fetchExchangeRates, FALLBACK_RATES } from '@/services/exchange-rates';
-import { getErrorMessage } from '@/utils/error';
 import { useAuth } from '@/context/AuthContext';
 import type {
   Budget,
@@ -65,66 +64,32 @@ const initialState: AppState = {
 
 // ─── Actions ─────────────────────────────────────────────────────────────────
 
-/**
- * All actions that can be dispatched to the app reducer.
- * Use the context methods returned by {@link useApp} rather than dispatching directly.
- */
 type Action =
-  /** Set the global loading spinner on or off. */
   | { type: 'SET_LOADING'; loading: boolean }
-  /** Set or clear the global error message. Also clears loading. */
   | { type: 'SET_ERROR'; error: string | null }
-  /** Replace the transaction list with a fresh page-1 result. */
   | { type: 'SET_TRANSACTIONS'; txs: Transaction[]; hasMore: boolean; page: number }
-  /** Append the next page of transactions to the existing list. */
   | { type: 'APPEND_TRANSACTIONS'; txs: Transaction[]; hasMore: boolean; page: number }
-  /** Prepend a newly created transaction to the list. */
   | { type: 'ADD_TRANSACTION'; tx: Transaction }
-  /** Replace a transaction in the list with an updated version. */
   | { type: 'UPDATE_TRANSACTION'; tx: Transaction }
-  /** Remove a transaction from the list by id. */
   | { type: 'REMOVE_TRANSACTION'; id: string }
-  /** Replace the full category list. */
   | { type: 'SET_CATEGORIES'; cats: Category[] }
-  /** Append a newly created category to the list. */
   | { type: 'ADD_CATEGORY'; cat: Category }
-  /** Replace a category in the list with an updated version. */
   | { type: 'UPDATE_CATEGORY'; cat: Category }
-  /** Remove a category from the list by id. */
   | { type: 'REMOVE_CATEGORY'; id: string }
-  /** Set the aggregated transaction statistics. */
   | { type: 'SET_STATS'; stats: TransactionStats }
-  /** Replace the full budget list. */
   | { type: 'SET_BUDGETS'; budgets: Budget[] }
-  /** Set or clear the per-category budget summary for a given month. */
   | { type: 'SET_BUDGET_SUMMARY'; items: BudgetSummaryItem[] | null }
-  /** Append a newly created budget to the list. */
   | { type: 'ADD_BUDGET'; budget: Budget }
-  /** Replace a budget in the list with an updated version. */
   | { type: 'UPDATE_BUDGET'; budget: Budget }
-  /** Remove a budget from the list by id. */
   | { type: 'REMOVE_BUDGET'; id: string }
-  /** Replace the full goal list. */
   | { type: 'SET_GOALS'; goals: Goal[] }
-  /** Append a newly created goal to the list. */
   | { type: 'ADD_GOAL'; goal: Goal }
-  /** Replace a goal in the list with an updated version. */
   | { type: 'UPDATE_GOAL'; goal: Goal }
-  /** Remove a goal from the list by id. */
   | { type: 'REMOVE_GOAL'; id: string }
-  /** Set the user's selected display currency. */
   | { type: 'SET_CURRENCY'; currency: SupportedCurrency }
-  /** Set the user's selected locale. */
   | { type: 'SET_LOCALE'; locale: SupportedLocale }
-  /** Replace the exchange-rate map and mark rates as loaded. */
   | { type: 'SET_EXCHANGE_RATES'; rates: Record<string, number> }
-  /** Set the exchange-rate loading flag. */
   | { type: 'SET_RATES_LOADING'; loading: boolean }
-  /**
-   * Reset all financial data to initial state.
-   * Currency, locale, and exchange rates are preserved so the UI
-   * stays in the user's preferred language/currency after logout.
-   */
   | { type: 'RESET' };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -227,26 +192,6 @@ const LOCALE_KEY = '@fintrack_locale';
 
 // ─── Provider ────────────────────────────────────────────────────────────────
 
-/**
- * Provides all app state and data-mutation methods to the component tree.
- *
- * Responsibilities:
- * - Loads persisted `currency` and `locale` from AsyncStorage on mount.
- * - Fetches live exchange rates on mount.
- * - Resets all financial data on logout while preserving currency and locale.
- * - Triggers a full `refresh()` when the user becomes authenticated.
- *
- * Must be rendered inside `AuthProvider`.
- *
- * @example
- * ```tsx
- * <AuthProvider>
- *   <AppProvider>
- *     <App />
- *   </AppProvider>
- * </AuthProvider>
- * ```
- */
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -277,7 +222,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const res = await transactionsService.getAll({ ...filters, page: 1, page_size: 20 });
       dispatch({ type: 'SET_TRANSACTIONS', txs: res.items, hasMore: res.has_more, page: 1 });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
+      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
     }
   }, []);
 
@@ -289,7 +234,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const res = await transactionsService.getAll({ ...filters, page: nextPage, page_size: 20 });
       dispatch({ type: 'APPEND_TRANSACTIONS', txs: res.items, hasMore: res.has_more, page: nextPage });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
+      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
     }
   }, [state.loading, state.hasMore, state.page]);
 
@@ -317,7 +262,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const cats = await categoriesService.getAll();
       dispatch({ type: 'SET_CATEGORIES', cats });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
+      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
     }
   }, []);
 
@@ -345,7 +290,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const stats = await transactionsService.getStats(month);
       dispatch({ type: 'SET_STATS', stats });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
+      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
     }
   }, []);
 
@@ -356,7 +301,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const budgets = await budgetsService.getAll();
       dispatch({ type: 'SET_BUDGETS', budgets });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
+      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
     }
   }, []);
 
@@ -365,7 +310,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const { items } = await budgetsService.getSummary(month);
       dispatch({ type: 'SET_BUDGET_SUMMARY', items });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
+      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
     }
   }, []);
 
@@ -393,7 +338,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const goals = await goalsService.getAll();
       dispatch({ type: 'SET_GOALS', goals });
     } catch (e: unknown) {
-      dispatch({ type: 'SET_ERROR', error: getErrorMessage(e) });
+      dispatch({ type: 'SET_ERROR', error: (e as Error).message });
     }
   }, []);
 
@@ -501,20 +446,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-/**
- * Access the global app state and all data-mutation methods.
- *
- * Must be called inside an {@link AppProvider}.
- *
- * @returns Full {@link AppContextValue} — state fields plus CRUD methods for
- *   transactions, categories, budgets, goals, and user preferences.
- * @throws {Error} If called outside an `AppProvider`.
- *
- * @example
- * ```tsx
- * const { transactions, addTransaction } = useApp();
- * ```
- */
 export function useApp(): AppContextValue {
   const ctx = useContext(AppContext);
   if (!ctx) throw new Error('useApp must be used within AppProvider');

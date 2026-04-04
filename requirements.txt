@@ -1,11 +1,10 @@
-fastapi[standard]
-uvicorn[standard]
+fastapi
+uvicorn
 sqlalchemy[asyncio]
 asyncpg
-alembic
 pydantic[email]
 pydantic-settings
-python-jose[cryptography]
+python-jose
 bcrypt
 httpx
 python-dotenv
