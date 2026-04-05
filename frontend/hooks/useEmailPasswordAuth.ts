@@ -39,6 +39,7 @@ export function useEmailPasswordAuth() {
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    console.log('[DEBUG] handleSubmit called — email:', email, 'password.length:', password.length, 'mode:', mode);
     const trimmedEmail = email.trim();
     const isLogin = mode === 'login';
 
