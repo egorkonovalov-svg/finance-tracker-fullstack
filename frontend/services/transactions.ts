@@ -1,5 +1,4 @@
 import { api, USE_MOCK } from './api-client';
-import { mockDelay } from '../utils/mock';
 import { MOCK_CATEGORIES, MOCK_TRANSACTIONS } from './mock-data';
 import type {
   CreateTransactionPayload,
@@ -15,6 +14,9 @@ import type {
 let mockStore = [...MOCK_TRANSACTIONS];
 let nextId = mockStore.length + 1;
 
+function delay(ms = 300) {
+  return new Promise((r) => setTimeout(r, ms));
+}
 
 function matchesFilters(tx: Transaction, f: TransactionFilters): boolean {
   if (f.type && tx.type !== f.type) return false;
@@ -35,7 +37,7 @@ function matchesFilters(tx: Transaction, f: TransactionFilters): boolean {
 // ─── Mock implementations ────────────────────────────────────────────────────
 
 async function mockGetTransactions(filters: TransactionFilters = {}): Promise<PaginatedResponse<Transaction>> {
-  await mockDelay(300);
+  await delay();
   const page = filters.page ?? 1;
   const pageSize = filters.page_size ?? 20;
   const filtered = mockStore
@@ -47,14 +49,14 @@ async function mockGetTransactions(filters: TransactionFilters = {}): Promise<Pa
 }
 
 async function mockGetTransaction(id: string): Promise<Transaction> {
-  await mockDelay(150);
+  await delay(150);
   const tx = mockStore.find((t) => t.id === id);
   if (!tx) throw new Error(`Transaction ${id} not found`);
   return { ...tx };
 }
 
 async function mockCreateTransaction(data: CreateTransactionPayload): Promise<Transaction> {
-  await mockDelay(200);
+  await delay(200);
   const category = MOCK_CATEGORIES.find((c) => c.id === data.category_id)?.name ?? '';
   const tx: Transaction = { ...data, id: `tx-${++nextId}`, category };
   mockStore = [tx, ...mockStore];
@@ -62,7 +64,7 @@ async function mockCreateTransaction(data: CreateTransactionPayload): Promise<Tr
 }
 
 async function mockUpdateTransaction(id: string, data: UpdateTransactionPayload): Promise<Transaction> {
-  await mockDelay(200);
+  await delay(200);
   const idx = mockStore.findIndex((t) => t.id === id);
   if (idx === -1) throw new Error(`Transaction ${id} not found`);
   mockStore[idx] = { ...mockStore[idx], ...data };
@@ -70,12 +72,12 @@ async function mockUpdateTransaction(id: string, data: UpdateTransactionPayload)
 }
 
 async function mockDeleteTransaction(id: string): Promise<void> {
-  await mockDelay(150);
+  await delay(150);
   mockStore = mockStore.filter((t) => t.id !== id);
 }
 
 async function mockGetStats(month?: string): Promise<TransactionStats> {
-  await mockDelay(200);
+  await delay(200);
   const now = new Date();
   const targetMonth = month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const [y, m] = targetMonth.split('-').map(Number);

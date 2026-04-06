@@ -38,6 +38,14 @@ export function useVerificationCode() {
   const [sessionId, setSessionId] = useState(pendingVerification?.session_id ?? '');
   const email = pendingVerification?.email ?? '';
 
+  // Sync sessionId if pendingVerification is populated after initial mount
+  // (can happen when navigation and context update land in different batches)
+  useEffect(() => {
+    if (pendingVerification?.session_id) {
+      setSessionId(pendingVerification.session_id);
+    }
+  }, [pendingVerification?.session_id]);
+
   const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);

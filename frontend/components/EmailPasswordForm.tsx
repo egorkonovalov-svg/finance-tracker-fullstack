@@ -111,7 +111,7 @@ export function EmailPasswordForm({
 
       <Pressable
         style={[styles.primaryBtn, { backgroundColor: Palette.indigo, opacity: submitting ? 0.7 : 1 }]}
-        onPress={onSubmit}
+        onPress={() => { console.log('[DEBUG] Pressable onPress fired'); onSubmit(); }}
         disabled={submitting}
         accessibilityLabel={isLogin ? t('auth.logIn') : t('auth.signUp')}
         accessibilityRole="button"

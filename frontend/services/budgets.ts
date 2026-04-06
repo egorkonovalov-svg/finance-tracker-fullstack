@@ -1,5 +1,4 @@
 import { api, USE_MOCK } from './api-client';
-import { mockDelay } from '../utils/mock';
 import type {
   Budget,
   BudgetSummaryItem,
@@ -12,14 +11,17 @@ import type {
 let mockStore: Budget[] = [];
 let nextId = 1;
 
+function delay(ms = 200) {
+  return new Promise((r) => setTimeout(r, ms));
+}
 
 async function mockGetAll(): Promise<Budget[]> {
-  await mockDelay(200);
+  await delay();
   return [...mockStore];
 }
 
 async function mockGetSummary(_month?: string): Promise<BudgetSummaryItem[]> {
-  await mockDelay(200);
+  await delay();
   return mockStore.map((b) => ({
     category: b.category,
     amount_limit: b.amount_limit,
@@ -29,7 +31,7 @@ async function mockGetSummary(_month?: string): Promise<BudgetSummaryItem[]> {
 }
 
 async function mockCreate(data: CreateBudgetPayload): Promise<Budget> {
-  await mockDelay(200);
+  await delay();
   const existing = mockStore.find((b) => b.category === data.category);
   if (existing) {
     throw new Error(`Budget for category '${data.category}' already exists`);
@@ -44,7 +46,7 @@ async function mockCreate(data: CreateBudgetPayload): Promise<Budget> {
 }
 
 async function mockUpdate(id: string, data: UpdateBudgetPayload): Promise<Budget> {
-  await mockDelay(200);
+  await delay();
   const idx = mockStore.findIndex((b) => b.id === id);
   if (idx === -1) throw new Error(`Budget ${id} not found`);
   mockStore[idx] = { ...mockStore[idx], ...data };
@@ -52,7 +54,7 @@ async function mockUpdate(id: string, data: UpdateBudgetPayload): Promise<Budget
 }
 
 async function mockRemove(id: string): Promise<void> {
-  await mockDelay(200);
+  await delay();
   mockStore = mockStore.filter((b) => b.id !== id);
 }
 
