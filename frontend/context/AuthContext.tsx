@@ -36,7 +36,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
 }
 
-const TOKEN_KEY = '@fintrack_token';
+const TOKEN_KEY = 'fintrack_token';
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
